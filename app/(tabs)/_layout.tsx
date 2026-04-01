@@ -1,33 +1,68 @@
-import { Tabs } from 'expo-router';
-import React from 'react';
-
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { Tabs } from "expo-router";
+import { Home, Clipboard, MessageCircle, Library, TrendingUp } from "lucide-react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const insets = useSafeAreaInsets();
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
         headerShown: false,
-        tabBarButton: HapticTab,
-      }}>
+        tabBarActiveTintColor: "#A9C9FF",
+        tabBarInactiveTintColor: "#64748b",
+        tabBarStyle: {
+          backgroundColor: "#ffffff",
+          borderTopWidth: 1,
+          borderTopColor: "#e2e8f0",
+          elevation: 10,
+          shadowColor: "#000",
+          shadowOpacity: 0.1,
+          shadowRadius: 10,
+          paddingTop: 8,
+          paddingBottom: insets.bottom > 0 ? insets.bottom + 4 : 12,
+          height: insets.bottom > 0 ? 60 + insets.bottom : 70,
+        },
+        tabBarLabelStyle: {
+          fontSize: 10,
+          fontWeight: "500",
+          marginTop: 2,
+        },
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          title: "Início",
+          tabBarIcon: ({ color }) => <Home size={24} color={color} />,
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="plan"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          title: "Meu Plano",
+          tabBarIcon: ({ color }) => <Clipboard size={24} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="chat"
+        options={{
+          title: "Luna",
+          tabBarIcon: ({ color }) => <MessageCircle size={24} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="library"
+        options={{
+          title: "Biblioteca",
+          tabBarIcon: ({ color }) => <Library size={24} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="progress"
+        options={{
+          title: "Progresso",
+          tabBarIcon: ({ color }) => <TrendingUp size={24} color={color} />,
         }}
       />
     </Tabs>
