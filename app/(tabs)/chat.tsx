@@ -35,6 +35,7 @@ export default function ChatScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const scrollViewRef = useRef<ScrollView>(null);
+  const sessionIdRef = useRef(`session-${Date.now()}-${Math.floor(Math.random() * 1000)}`);
 
   const detectCrisis = (text: string) => {
     return crisisKeywords.some((keyword) =>
@@ -42,21 +43,22 @@ export default function ChatScreen() {
     );
   };
 
-  const handleSend = () => {
+  const handleSend = async () => {
     if (!inputValue.trim()) return;
 
     if (detectCrisis(inputValue)) {
       setShowCrisisAlert(true);
     }
 
+    const userText = inputValue;
     const userMessage: Message = {
-      id: messages.length + 1,
+      id: Date.now(),
       sender: "user",
-      text: inputValue,
+      text: userText,
       timestamp: new Date(),
     };
 
-    setMessages([...messages, userMessage]);
+    setMessages((prev) => [...prev, userMessage]);
     setInputValue("");
     setIsTyping(true);
 
@@ -64,31 +66,45 @@ export default function ChatScreen() {
       scrollViewRef.current?.scrollToEnd({ animated: true });
     }, 100);
 
-    // Simulate Luna's response
-    setTimeout(() => {
+    try {
+      const response = await fetch("[N8N_URL_REMOVED]", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message: userText,
+          sessionId: sessionIdRef.current,
+        }),
+      });
+
+      const data = await response.json();
+      
+      const replyText = data.output || data.text || data.response || "Compreendo. Me conte um pouco mais.";
+
       const lunaMessage: Message = {
-        id: messages.length + 2,
+        id: Date.now() + 1,
         sender: "luna",
-        text: getLunaResponse(),
+        text: replyText,
         timestamp: new Date(),
       };
+      
       setMessages((prev) => [...prev, lunaMessage]);
+    } catch (error) {
+      console.error("Error communicating with n8n Luna agent:", error);
+      const errorMessage: Message = {
+        id: Date.now() + 1,
+        sender: "luna",
+        text: "Me desculpe, estou com instabilidade de conexão no momento. Ah, e por favor verifique se configurou a API Key do Gemini lá no meu Agent (n8n)! 🥺",
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    } finally {
       setIsTyping(false);
       setTimeout(() => {
         scrollViewRef.current?.scrollToEnd({ animated: true });
       }, 100);
-    }, 1500);
-  };
-
-  const getLunaResponse = () => {
-    const responses = [
-      "Entendo como você está se sentindo. Pode me contar mais sobre isso?",
-      "Seus sentimentos são válidos. O que você acha que está por trás disso?",
-      "Isso parece desafiador. Como você tem lidado com essa situação?",
-      "Obrigada por compartilhar isso comigo. Vamos explorar juntos maneiras de lidar com isso.",
-      "Percebo que isso é importante para você. Quer falar mais sobre como isso te afeta?",
-    ];
-    return responses[Math.floor(Math.random() * responses.length)];
+    }
   };
 
   return (

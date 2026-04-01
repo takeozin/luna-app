@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { View, Text, Pressable, ScrollView } from "react-native";
+import { View, Text, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
 import { Button } from "../components/Button";
 import { Card } from "../components/Card";
 import { MotiView } from "moti";
-import { Moon, Smile, Brain, BriefcaseIcon, HardHat } from "lucide-react-native";
+import { Moon, Brain, Smile, Target, BriefcaseIcon } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -12,58 +12,54 @@ interface Question {
   id: number;
   question: string;
   icon: React.ReactNode;
-  type: "emoji" | "frequency" | "quality" | "choice";
-  options?: string[];
+  type: "yes_no";
 }
 
 const questions: Question[] = [
-  {
-    id: 1,
-    question: "Como você está se sentindo hoje?",
-    icon: <Smile size={32} color="#A9C9FF" />,
-    type: "emoji",
-  },
-  {
-    id: 2,
-    question: "Nos últimos dias, você tem sentido ansiedade ou preocupação?",
-    icon: <Brain size={32} color="#D6CCFE" />,
-    type: "frequency",
-  },
-  {
-    id: 3,
-    question: "Como está a qualidade do seu sono?",
-    icon: <Moon size={32} color="#B8E0D2" />,
-    type: "quality",
-  },
-  {
-    id: 4,
-    question: "Qual descreve melhor seu tipo de trabalho?",
-    icon: <BriefcaseIcon size={32} color="#FFD9B0" />,
-    type: "choice",
-    options: ["Campo/Operacional", "Escritório/Administrativo"],
-  },
-  {
-    id: 5,
-    question: "Com que frequência você tem pensamentos de incapacidade ou preocupação excessiva?",
-    icon: <Brain size={32} color="#FED9E8" />,
-    type: "frequency",
-  },
+  { id: 1, question: "Você tem dores de cabeça frequentes?", icon: <Target size={32} color="#A9C9FF" />, type: "yes_no" },
+  { id: 2, question: "Tem falta de apetite?", icon: <Target size={32} color="#A9C9FF" />, type: "yes_no" },
+  { id: 3, question: "Dorme mal?", icon: <Moon size={32} color="#B8E0D2" />, type: "yes_no" },
+  { id: 4, question: "Assusta-se com facilidade?", icon: <Target size={32} color="#FFD9B0" />, type: "yes_no" },
+  { id: 5, question: "Sente tremores nas mãos?", icon: <Target size={32} color="#A9C9FF" />, type: "yes_no" },
+  { id: 6, question: "Sente-se nervoso(a), tenso(a) ou preocupado(a)?", icon: <Brain size={32} color="#D6CCFE" />, type: "yes_no" },
+  { id: 7, question: "Tem má digestão?", icon: <Target size={32} color="#A9C9FF" />, type: "yes_no" },
+  { id: 8, question: "Tem dificuldade de pensar com clareza?", icon: <Brain size={32} color="#D6CCFE" />, type: "yes_no" },
+  { id: 9, question: "Tem se sentido triste ultimamente?", icon: <Smile size={32} color="#FED9E8" />, type: "yes_no" },
+  { id: 10, question: "Tem chorado mais do que de costume?", icon: <Smile size={32} color="#FED9E8" />, type: "yes_no" },
+  { id: 11, question: "Encontra dificuldade para realizar suas atividades diárias?", icon: <BriefcaseIcon size={32} color="#FFD9B0" />, type: "yes_no" },
+  { id: 12, question: "Tem dificuldade para tomar decisões?", icon: <Brain size={32} color="#D6CCFE" />, type: "yes_no" },
+  { id: 13, question: "Tem dificuldade para fazer o seu trabalho?", icon: <BriefcaseIcon size={32} color="#FFD9B0" />, type: "yes_no" },
+  { id: 14, question: "Sente que não consegue desempenhar um papel útil em sua vida?", icon: <Smile size={32} color="#FED9E8" />, type: "yes_no" },
+  { id: 15, question: "Tem perdido o interesse pelas coisas?", icon: <Smile size={32} color="#FED9E8" />, type: "yes_no" },
+  { id: 16, question: "Sente que é uma pessoa inútil ou sem valor?", icon: <Smile size={32} color="#FED9E8" />, type: "yes_no" },
+  { id: 17, question: "Você tem tido pensamentos de que não vale a pena continuar ou vontade de sumir?", icon: <Target size={32} color="#FFD9B0" />, type: "yes_no" },
+  { id: 18, question: "Sente-se cansado(a) o tempo todo?", icon: <Target size={32} color="#A9C9FF" />, type: "yes_no" },
+  { id: 19, question: "Tem sensações desagradáveis no estômago?", icon: <Target size={32} color="#A9C9FF" />, type: "yes_no" },
+  { id: 20, question: "Cansa-se com facilidade?", icon: <Target size={32} color="#A9C9FF" />, type: "yes_no" },
 ];
 
 export default function Anamnese() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [answers, setAnswers] = useState<Record<number, string | number>>({});
+  const [answers, setAnswers] = useState<Record<number, number>>({});
 
-  const handleAnswer = (answer: string | number) => {
-    const newAnswers = { ...answers, [questions[currentQuestion].id]: answer };
+  const handleAnswer = (answerValue: number) => {
+    const newAnswers = { ...answers, [questions[currentQuestion].id]: answerValue };
     setAnswers(newAnswers);
 
     if (currentQuestion < questions.length - 1) {
       setTimeout(() => setCurrentQuestion(currentQuestion + 1), 300);
     } else {
-      setTimeout(() => router.push("/anamnese-result"), 500);
+      // Cálculo do score total de Sim (onde Sim = 1) no SRQ-20
+      const finalScore = Object.values(newAnswers).reduce((acc, curr) => acc + curr, 0);
+      
+      setTimeout(() => {
+        router.push({
+          pathname: "/anamnese-result",
+          params: { score: finalScore },
+        });
+      }, 500);
     }
   };
 
@@ -120,9 +116,9 @@ export default function Anamnese() {
           className="max-w-md mx-auto w-full"
         >
           <Card className="mb-6 border-0 shadow-sm">
-            <View className="flex-row items-start gap-3">
+            <View className="flex-row items-center gap-3">
               {question.icon}
-              <Text className="text-lg flex-1 text-foreground leading-6">
+              <Text className="text-lg flex-1 text-foreground leading-6 font-medium">
                 {question.question}
               </Text>
             </View>
@@ -130,86 +126,22 @@ export default function Anamnese() {
 
           {/* Answer Options */}
           <View className="gap-3">
-            {question.type === "emoji" && (
-              <View className="flex-row justify-between w-full">
-                {[
-                  { emoji: "😫", label: "Péssimo", value: 1 },
-                  { emoji: "😟", label: "Mal", value: 2 },
-                  { emoji: "😐", label: "Ok", value: 3 },
-                  { emoji: "🙂", label: "Bem", value: 4 },
-                  { emoji: "😊", label: "Ótimo", value: 5 },
-                ].map((option) => (
-                  <Pressable
-                    key={option.value}
-                    onPress={() => handleAnswer(option.value)}
-                    className="items-center gap-2 p-3 rounded-2xl active:bg-[#A9C9FF]/20"
-                  >
-                    <Text className="text-4xl">{option.emoji}</Text>
-                    <Text className="text-xs text-muted-foreground">{option.label}</Text>
-                  </Pressable>
-                ))}
-              </View>
-            )}
-
-            {question.type === "frequency" && (
-              <View className="gap-2">
-                {[
-                  { label: "Nunca", value: 1 },
-                  { label: "Raramente", value: 2 },
-                  { label: "Às vezes", value: 3 },
-                  { label: "Frequentemente", value: 4 },
-                  { label: "Sempre", value: 5 },
-                ].map((option) => (
-                  <Button
-                    key={option.value}
-                    variant="secondary"
-                    className="w-full"
-                    onPress={() => handleAnswer(option.value)}
-                  >
-                    {option.label}
-                  </Button>
-                ))}
-              </View>
-            )}
-
-            {question.type === "quality" && (
-              <View className="gap-2">
-                {[
-                  { label: "Péssima", value: 1 },
-                  { label: "Ruim", value: 2 },
-                  { label: "Média", value: 3 },
-                  { label: "Boa", value: 4 },
-                  { label: "Ótima", value: 5 },
-                ].map((option) => (
-                  <Button
-                    key={option.value}
-                    variant="secondary"
-                    className="w-full"
-                    onPress={() => handleAnswer(option.value)}
-                  >
-                    {option.label}
-                  </Button>
-                ))}
-              </View>
-            )}
-
-            {question.type === "choice" && question.options && (
-              <View className="gap-2">
-                {question.options.map((option, index) => (
-                  <Button
-                    key={index}
-                    variant="secondary"
-                    className="w-full flex-row items-center justify-center gap-2"
-                    onPress={() => handleAnswer(option)}
-                  >
-                    {option.includes("Campo") ? (
-                      <HardHat size={20} color="#0b1b3d" />
-                    ) : (
-                      <BriefcaseIcon size={20} color="#0b1b3d" />
-                    )}
-                    <Text className="text-foreground ml-2">{option}</Text>
-                  </Button>
-                ))}
+            {question.type === "yes_no" && (
+              <View className="gap-3 mt-4">
+                <Button
+                  variant="primary"
+                  className="w-full h-14"
+                  onPress={() => handleAnswer(1)}
+                >
+                  <Text className="text-white text-base font-semibold">Sim</Text>
+                </Button>
+                <Button
+                  variant="secondary"
+                  className="w-full h-14"
+                  onPress={() => handleAnswer(0)}
+                >
+                  <Text className="text-foreground text-base font-semibold">Não</Text>
+                </Button>
               </View>
             )}
           </View>

@@ -1,5 +1,5 @@
 import { View, Text, ScrollView } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { Button } from "../components/Button";
 import { Card } from "../components/Card";
 import { ProgressBar } from "../components/ProgressBar";
@@ -38,6 +38,24 @@ const modules = [
 export default function AnamneseResult() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const params = useLocalSearchParams<{ score: string }>();
+  
+  const score = parseInt(params.score || "0", 10);
+  const isElevatedRisk = score >= 7;
+
+  const resultConfig = isElevatedRisk
+    ? {
+        icon: <Brain size={48} color="#eab308" />,
+        iconBg: "bg-amber-100",
+        title: "Percebemos que você está passando por um momento delicado",
+        subtitle: `Sua triagem indica sintomas de sobrecarga emocional. Seu Plano de Fortalecimento foi adaptado para focar no resgate do seu equilíbrio.\n\nLembre-se: O aplicativo não substitui ajuda médica médica, e buscar terapia é um forte aliado agora.`,
+      }
+    : {
+        icon: <CheckCircle size={48} color="#16a34a" />,
+        iconBg: "bg-[#D4EDDA]",
+        title: "Seu Plano de Fortalecimento Mental está pronto!",
+        subtitle: "Com base nas suas respostas, notamos que seu nível de bem-estar está equilibrado hoje. Preparei um plano personalizado para mantermos esse ritmo saudável.",
+      };
 
   return (
     <LinearGradient
@@ -57,15 +75,15 @@ export default function AnamneseResult() {
           transition={{ type: "timing", duration: 500 }}
           className="max-w-md mx-auto w-full"
         >
-          {/* Success Icon */}
+          {/* Result Icon */}
           <View className="items-center mb-6">
             <MotiView
               from={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ type: "spring", stiffness: 200, delay: 200 }}
-              className="w-20 h-20 rounded-full bg-[#D4EDDA] items-center justify-center"
+              className={`w-20 h-20 rounded-full ${resultConfig.iconBg} items-center justify-center`}
             >
-              <CheckCircle size={48} color="#16a34a" />
+              {resultConfig.icon}
             </MotiView>
           </View>
 
@@ -75,16 +93,16 @@ export default function AnamneseResult() {
             animate={{ opacity: 1, translateY: 0 }}
             transition={{ type: "timing", delay: 400 }}
           >
-            Seu Plano de Fortalecimento Mental está pronto!
+            {resultConfig.title}
           </MotiText>
 
           <MotiText
-            className="text-center text-muted-foreground mb-8 text-base"
+            className="text-center text-muted-foreground mb-8 text-base leading-6"
             from={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ type: "timing", delay: 600 }}
           >
-            Com base nas suas respostas, preparei um plano personalizado para você começar hoje mesmo.
+            {resultConfig.subtitle}
           </MotiText>
 
           {/* Modules */}
@@ -129,7 +147,8 @@ export default function AnamneseResult() {
             <Button
               variant="primary"
               size="lg"
-              onPress={() => router.push("/(tabs)/")}
+              // @ts-ignore - Ignorando o aviso de tipagem restrita do expo-router
+              onPress={() => router.replace("/(tabs)")}
               className="w-full"
             >
               Explorar meu plano
