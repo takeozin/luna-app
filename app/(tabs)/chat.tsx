@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { View, Text, TextInput, Pressable, ScrollView, KeyboardAvoidingView, Platform, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { Card } from "../../components/Card";
@@ -7,6 +7,8 @@ import { MotiView, AnimatePresence } from "moti";
 import { Send, Heart, AlertCircle } from "lucide-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
+import { supabase } from "../../lib/supabase";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface Message {
   id: number;
@@ -14,6 +16,8 @@ interface Message {
   text: string;
   timestamp: Date;
 }
+
+const CLINICAL_ID_KEY = "luna_clinical_id";
 
 const initialMessages: Message[] = [
   {
@@ -31,11 +35,21 @@ export default function ChatScreen() {
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [showCrisisAlert, setShowCrisisAlert] = useState(false);
+  const [clinicalId, setClinicalId] = useState<string | null>(null);
   
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const scrollViewRef = useRef<ScrollView>(null);
   const sessionIdRef = useRef(`session-${Date.now()}-${Math.floor(Math.random() * 1000)}`);
+
+  useEffect(() => {
+    loadClinicalId();
+  }, []);
+
+  const loadClinicalId = async () => {
+    const id = await AsyncStorage.getItem(CLINICAL_ID_KEY);
+    setClinicalId(id);
+  };
 
   const detectCrisis = (text: string) => {
     return crisisKeywords.some((keyword) =>
@@ -67,6 +81,8 @@ export default function ChatScreen() {
     }, 100);
 
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+
       const response = await fetch("[N8N_URL_REMOVED]", {
         method: "POST",
         headers: {
@@ -75,6 +91,8 @@ export default function ChatScreen() {
         body: JSON.stringify({
           message: userText,
           sessionId: sessionIdRef.current,
+          userId: user?.id || null, 
+          clinicalId: clinicalId, // Enviando identificador persistente ao dispositivo para o n8n
         }),
       });
 
