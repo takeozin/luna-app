@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { View, Text, ScrollView, ActivityIndicator } from "react-native";
+import { View, Text, ScrollView, ActivityIndicator, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { Button } from "../components/Button";
 import { Card } from "../components/Card";
@@ -120,19 +120,36 @@ export default function Anamnese() {
   const submitAnamnesisBackground = async (answersData: Record<number, number>, score: number) => {
     try {
       const stableId = await getOrCreateClinicalId();
-      const { data: authData } = await supabase.auth.signInAnonymously();
+      
+      // Garante que temos uma sessão antes de salvar
+      const { data: { session } } = await supabase.auth.getSession();
+      let userId = session?.user?.id;
+      
+      if (!session) {
+        const { data: authData, error: authError } = await supabase.auth.signInAnonymously();
+        if (authError) throw authError;
+        userId = authData.user?.id;
+      }
+
+      console.log("[Luna] Salvando anamnese para ID:", stableId);
 
       const { error: dbError } = await supabase.from('anamnesis_responses').insert({
-        user_id: authData.user?.id,
-        clinical_id: stableId, // Enviando identificador persistente ao dispositivo
+        user_id: userId,
+        clinical_id: stableId,
         score: score,
         answers: answersData
       });
       
-      if (dbError) throw dbError;
-      console.log("✅ [Luna] SRQ-20 com Clinical ID salvo com sucesso!");
-    } catch (error) {
-      console.error("❌ [Luna] Erro ao salvar anamnese estável:", error);
+      if (dbError) {
+        console.error("❌ [Luna] Erro DB:", dbError);
+        Alert.alert("Erro ao Salvar", `Não conseguimos registrar sua resposta: ${dbError.message} (${dbError.code})`);
+        throw dbError;
+      }
+      
+      console.log("✅ [Luna] SRQ-20 salvo com sucesso!");
+    } catch (error: any) {
+      console.error("❌ [Luna] Erro geral no salvamento:", error);
+      Alert.alert("Erro", "Ocorreu um problema ao salvar seus dados. Por favor, tente novamente em instantes.");
     }
   };
 

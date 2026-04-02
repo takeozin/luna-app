@@ -48,7 +48,7 @@ export default function AnamneseResult() {
         icon: <Brain size={48} color="#eab308" />,
         iconBg: "bg-amber-100",
         title: "Percebemos que você está passando por um momento delicado",
-        subtitle: `Sua triagem indica sintomas de sobrecarga emocional. Seu Plano de Fortalecimento foi adaptado para focar no resgate do seu equilíbrio.\n\nLembre-se: O aplicativo não substitui ajuda médica médica, e buscar terapia é um forte aliado agora.`,
+        subtitle: `Sua triagem indica sintomas de sobrecarga emocional. Seu Plano de Fortalecimento foi adaptado para focar no resgate do seu equilíbrio.\n\nLembre-se: O aplicativo não substitui ajuda médica, e buscar terapia é um forte aliado agora.`,
       }
     : {
         icon: <CheckCircle size={48} color="#16a34a" />,
