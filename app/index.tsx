@@ -11,7 +11,7 @@ export default function Welcome() {
 
   return (
     <LinearGradient
-      colors={['rgba(169, 201, 255, 0.2)', '#FFFFFF']}
+      colors={['#F0F7FF', '#FFFFFF']}
       style={{ flex: 1 }}
     >
       <View className="flex-1 items-center justify-center px-6" style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}>
@@ -29,23 +29,17 @@ export default function Welcome() {
             transition={{ type: 'timing', duration: 600, delay: 200 }}
           />
 
-          <MotiText
-            className="text-3xl text-foreground text-center font-semibold mb-4"
-            from={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ type: 'timing', delay: 400 }}
+          <Text
+            className="text-3xl text-slate-900 text-center font-semibold mb-4"
           >
             Oi! Que bom ter você aqui.
-          </MotiText>
+          </Text>
 
-          <MotiText
-            className="text-lg text-muted-foreground text-center mb-8"
-            from={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ type: 'timing', delay: 600 }}
+          <Text
+            className="text-lg text-slate-600 text-center mb-8"
           >
             Vamos começar uma jornada de autoconhecimento? Primeiro, preciso te conhecer um pouquinho.
-          </MotiText>
+          </Text>
 
           <MotiView
             from={{ opacity: 0 }}

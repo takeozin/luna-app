@@ -182,41 +182,34 @@ export default function Anamnese() {
 
   if (cooldownDays !== null) {
     return (
-      <LinearGradient colors={["rgba(169, 201, 255, 0.1)", "#FFFFFF"]} style={{ flex: 1 }}>
+      <LinearGradient colors={["#F8FAFC", "#FFFFFF"]} style={{ flex: 1 }}>
         <View className="flex-1 items-center justify-center px-8" style={{ paddingTop: insets.top }}>
-          <MotiView
-            from={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="items-center w-full"
+          <View className="w-20 h-20 bg-slate-100 rounded-full items-center justify-center mb-8">
+            <Clock color="#64748b" size={40} />
+          </View>
+
+          <Text className="text-3xl font-bold text-slate-900 mb-4 text-center">
+            Oi de novo! 🌙
+          </Text>
+
+          <Text className="text-lg text-slate-600 text-center mb-10 leading-6">
+            Você já realizou sua triagem nos últimos 15 dias. O ideal é que as avaliações tenham esse intervalo para acompanharmos seu progresso real.
+          </Text>
+
+          <Card className="w-full p-6 mb-8 border-dashed border-2 border-[#A9C9FF]">
+            <Text className="text-center text-muted-foreground mb-1">Próxima avaliação em:</Text>
+            <Text className="text-3xl font-bold text-[#A9C9FF] text-center">
+              {cooldownDays === 1 ? 'Amanhã' : `${cooldownDays} dias`}
+            </Text>
+          </Card>
+
+          <Button
+            variant="outline"
+            onPress={() => router.replace("/(tabs)")}
+            className="w-full border-slate-200"
           >
-            <View className="w-20 h-20 bg-[#A9C9FF]/20 rounded-full items-center justify-center mb-6">
-              <Clock size={40} color="#A9C9FF" />
-            </View>
-            
-            <Text className="text-2xl font-bold text-foreground text-center mb-4">
-              Oi de novo! 🌙
-            </Text>
-            
-            <Text className="text-lg text-muted-foreground text-center mb-8 leading-6">
-              Você já realizou sua triagem nos últimos 15 dias. O ideal é que as avaliações tenham esse intervalo para acompanharmos seu progresso real.
-            </Text>
-
-            <Card className="w-full p-6 mb-8 border-dashed border-2 border-[#A9C9FF]">
-              <Text className="text-center text-muted-foreground mb-1">Próxima avaliação em:</Text>
-              <Text className="text-3xl font-bold text-[#A9C9FF] text-center">
-                {cooldownDays === 1 ? 'Amanhã' : `${cooldownDays} dias`}
-              </Text>
-            </Card>
-
-            <Button
-              variant="outline"
-              className="w-full h-14 border-[#A9C9FF]"
-              onPress={() => router.replace("/(tabs)")}
-            >
-              <ArrowLeft size={20} color="#A9C9FF" className="mr-2" />
-              <Text className="text-[#A9C9FF] text-base font-semibold">Voltar para o Menu</Text>
-            </Button>
-          </MotiView>
+            <Text className="text-slate-600">Voltar para o Menu</Text>
+          </Button>
         </View>
       </LinearGradient>
     );
@@ -227,7 +220,7 @@ export default function Anamnese() {
 
   return (
     <LinearGradient
-      colors={["rgba(169, 201, 255, 0.1)", "#FFFFFF"]}
+      colors={["#F8FAFC", "#FFFFFF"]}
       style={{ flex: 1 }}
     >
       <ScrollView
@@ -253,15 +246,10 @@ export default function Anamnese() {
         </View>
 
         <View className="flex-row items-center gap-3 mb-6 max-w-md mx-auto w-full">
-          <View className="w-12 h-12 rounded-full overflow-hidden">
-            <LinearGradient
-              colors={["#A9C9FF", "#D6CCFE"]}
-              className="w-full h-full justify-center items-center"
-            >
-              <Moon size={24} color="#FFFFFF" />
-            </LinearGradient>
+          <View className="w-10 h-10 rounded-full overflow-hidden bg-slate-100 items-center justify-center">
+            <Moon size={20} color="#64748b" />
           </View>
-          <Text className="text-sm font-semibold text-foreground">Luna</Text>
+          <Text className="text-sm font-bold text-slate-800 uppercase tracking-widest">Luna</Text>
         </View>
 
         <MotiView
@@ -271,10 +259,12 @@ export default function Anamnese() {
           transition={{ type: "timing", duration: 300 }}
           className="max-w-md mx-auto w-full"
         >
-          <Card className="mb-6 border-0 shadow-sm">
-            <View className="flex-row items-center gap-3">
-              {question.icon}
-              <Text className="text-lg flex-1 text-foreground leading-6 font-medium">
+          <Card className="mb-6 border-0 shadow-sm bg-white">
+            <View className="flex-row items-center gap-4 p-2">
+              <View className="w-12 h-12 bg-slate-50 rounded-xl items-center justify-center">
+                {question.icon}
+              </View>
+              <Text className="text-lg font-semibold text-slate-800 flex-1 leading-6">
                 {question.question}
               </Text>
             </View>

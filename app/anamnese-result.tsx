@@ -59,7 +59,7 @@ export default function AnamneseResult() {
 
   return (
     <LinearGradient
-      colors={["rgba(184, 224, 210, 0.2)", "#FFFFFF"]}
+      colors={["#F0FDF9", "#FFFFFF"]}
       style={{ flex: 1 }}
     >
       <ScrollView
@@ -87,23 +87,17 @@ export default function AnamneseResult() {
             </MotiView>
           </View>
 
-          <MotiText
-            className="text-3xl text-center mb-4 text-foreground font-semibold"
-            from={{ opacity: 0, translateY: 20 }}
-            animate={{ opacity: 1, translateY: 0 }}
-            transition={{ type: "timing", delay: 400 }}
+          <Text
+            className="text-3xl text-center mb-4 text-slate-900 font-bold"
           >
             {resultConfig.title}
-          </MotiText>
+          </Text>
 
-          <MotiText
-            className="text-center text-muted-foreground mb-8 text-base leading-6"
-            from={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ type: "timing", delay: 600 }}
+          <Text
+            className="text-center text-slate-600 mb-8 text-base leading-6"
           >
             {resultConfig.subtitle}
-          </MotiText>
+          </Text>
 
           {/* Modules */}
           <View className="gap-4 mb-8">
@@ -123,7 +117,7 @@ export default function AnamneseResult() {
                       {module.icon}
                     </View>
                     <View className="flex-1 justify-center">
-                      <Text className="text-base font-semibold text-foreground mb-2">
+                      <Text className="text-base font-bold text-slate-800 mb-2">
                         {module.title}
                       </Text>
                       <View className="flex-row items-center gap-2">
