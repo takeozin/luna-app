@@ -4,7 +4,7 @@ import { Button } from "../components/Button";
 import { Card } from "../components/Card";
 import { ProgressBar } from "../components/ProgressBar";
 import { MotiView, MotiText } from "moti";
-import { Moon, Brain, Target, CheckCircle } from "lucide-react-native";
+import { Moon, Brain, Target, CheckCircle, AlertTriangle, Phone } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -38,24 +38,66 @@ const modules = [
 export default function AnamneseResult() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const params = useLocalSearchParams<{ score: string }>();
+  const params = useLocalSearchParams<{ score: string, q17: string }>();
   
   const score = parseInt(params.score || "0", 10);
-  const isElevatedRisk = score >= 7;
+  const isQ17Positive = params.q17 === "true";
+  
+  // Níveis de Risco:
+  // - Normal: 0-6
+  // - High: 7-10 (e Q17 negativa)
+  // - Critical: 11+ OU Q17 positiva
+  const riskLevel = isQ17Positive || score >= 11 ? "critical" : score >= 7 ? "high" : "normal";
 
-  const resultConfig = isElevatedRisk
-    ? {
-        icon: <Brain size={48} color="#eab308" />,
-        iconBg: "bg-amber-100",
-        title: "Percebemos que você está passando por um momento delicado",
-        subtitle: `Sua triagem indica sintomas de sobrecarga emocional. Seu Plano de Fortalecimento foi adaptado para focar no resgate do seu equilíbrio.\n\nLembre-se: O aplicativo não substitui ajuda médica, e buscar terapia é um forte aliado agora.`,
-      }
-    : {
-        icon: <CheckCircle size={48} color="#16a34a" />,
-        iconBg: "bg-[#D4EDDA]",
-        title: "Seu Plano de Fortalecimento Mental está pronto!",
-        subtitle: "Com base nas suas respostas, notamos que seu nível de bem-estar está equilibrado hoje. Preparei um plano personalizado para mantermos esse ritmo saudável.",
-      };
+  interface ResultConfig {
+    icon: React.ReactNode;
+    iconBg: string;
+    title: string;
+    subtitle: string;
+    buttonText: string;
+    route: string;
+    extra?: React.ReactNode;
+  }
+
+  const resultConfigs: Record<string, ResultConfig> = {
+    normal: {
+      icon: <CheckCircle size={48} color="#16a34a" />,
+      iconBg: "bg-green-100",
+      title: "Seu bem-estar está em dia!",
+      subtitle: "Os resultados indicam um equilíbrio emocional saudável. Continue cuidando de você e aproveite o dia!",
+      buttonText: "Ir para o Início",
+      route: "/(tabs)",
+    },
+    high: {
+      icon: <Brain size={48} color="#eab308" />,
+      iconBg: "bg-amber-100",
+      title: "Hora de focar no seu fortalecimento",
+      subtitle: "Notamos alguns sinais de stress e sobrecarga. Preparei atividades especiais para te ajudar a relaxar e recuperar o equilíbrio.",
+      buttonText: "Explorar Atividades",
+      route: "/(tabs)/plan",
+    },
+    critical: {
+      icon: <AlertTriangle size={48} color="#dc2626" />,
+      iconBg: "bg-red-100",
+      title: "Precisamos dar atenção especial a você",
+      subtitle: "Vi que você está passando por um momento muito pesado. Quero te ouvir e buscar as melhores alternativas de apoio agora.",
+      buttonText: "Falar com Luna agora",
+      route: "/(tabs)/chat",
+      extra: (
+        <View className="bg-red-50 border border-red-200 p-4 rounded-2xl mb-8 flex-row items-center gap-4">
+          <View className="w-12 h-12 bg-red-100 rounded-full items-center justify-center">
+            <Phone size={24} color="#dc2626" />
+          </View>
+          <View className="flex-1">
+            <Text className="text-red-900 font-bold text-lg">CVV 188</Text>
+            <Text className="text-red-700 text-sm">Disponível 24h para apoio emocional gratuito.</Text>
+          </View>
+        </View>
+      )
+    }
+  };
+
+  const config = resultConfigs[riskLevel];
 
   return (
     <LinearGradient
@@ -81,23 +123,25 @@ export default function AnamneseResult() {
               from={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ type: "spring", stiffness: 200, delay: 200 }}
-              className={`w-20 h-20 rounded-full ${resultConfig.iconBg} items-center justify-center`}
+              className={`w-20 h-20 rounded-full ${config.iconBg} items-center justify-center`}
             >
-              {resultConfig.icon}
+              {config.icon}
             </MotiView>
           </View>
 
           <Text
             className="text-3xl text-center mb-4 text-slate-900 font-bold"
           >
-            {resultConfig.title}
+            {config.title}
           </Text>
 
           <Text
             className="text-center text-slate-600 mb-8 text-base leading-6"
           >
-            {resultConfig.subtitle}
+            {config.subtitle}
           </Text>
+
+          {config.extra && config.extra}
 
           {/* Modules */}
           <View className="gap-4 mb-8">
@@ -141,11 +185,17 @@ export default function AnamneseResult() {
             <Button
               variant="primary"
               size="lg"
-              // @ts-ignore - Ignorando o aviso de tipagem restrita do expo-router
-              onPress={() => router.replace("/(tabs)")}
+              // @ts-ignore
+              onPress={() => {
+                if (riskLevel === "critical") {
+                  router.replace({ pathname: "/(tabs)/chat", params: { mode: 'crisis' } });
+                } else {
+                  router.replace(config.route as any);
+                }
+              }}
               className="w-full"
             >
-              Explorar meu plano
+              <Text className="text-white font-bold">{config.buttonText}</Text>
             </Button>
           </MotiView>
         </MotiView>

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { View, Text, TextInput, Pressable, ScrollView, KeyboardAvoidingView, Platform, StyleSheet } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { Card } from "../../components/Card";
 import { Button } from "../../components/Button";
 import { MotiView, AnimatePresence } from "moti";
@@ -36,6 +36,7 @@ export default function ChatScreen() {
   const [isTyping, setIsTyping] = useState(false);
   const [showCrisisAlert, setShowCrisisAlert] = useState(false);
   const [clinicalId, setClinicalId] = useState<string | null>(null);
+  const params = useLocalSearchParams<{ mode?: string }>();
   
   const insets = useSafeAreaInsets();
   const router = useRouter();
@@ -44,7 +45,19 @@ export default function ChatScreen() {
 
   useEffect(() => {
     loadClinicalId();
-  }, []);
+    
+    // Se entrar em modo de crise, mostrar alerta e mensagem especial
+    if (params.mode === 'crisis') {
+      setShowCrisisAlert(true);
+      const crisisWelcome: Message = {
+        id: Date.now() + 99,
+        sender: "luna",
+        text: "Oi... vi que as coisas estão muito difíceis para você agora. Quero que saiba que estou aqui para te ouvir, mas se sentir que está em perigo imediato, por favor, ligue para o CVV no 188. Você não precisa carregar tudo isso sozinho(a).",
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, crisisWelcome]);
+    }
+  }, [params.mode]);
 
   const loadClinicalId = async () => {
     const id = await AsyncStorage.getItem(CLINICAL_ID_KEY);

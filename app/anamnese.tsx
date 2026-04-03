@@ -161,12 +161,17 @@ export default function Anamnese() {
       setTimeout(() => setCurrentQuestion(currentQuestion + 1), 300);
     } else {
       const finalScore = Object.values(newAnswers).reduce((acc, curr) => acc + curr, 0);
+      const isQ17Positive = newAnswers[17] === 1; // Pergunta sobre "vontade de sumir"
+
       submitAnamnesisBackground(newAnswers, finalScore);
 
       setTimeout(() => {
         router.push({
           pathname: "/anamnese-result",
-          params: { score: finalScore },
+          params: { 
+            score: finalScore,
+            q17: isQ17Positive ? "true" : "false"
+          },
         });
       }, 500);
     }
