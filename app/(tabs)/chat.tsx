@@ -22,6 +22,29 @@ const CLINICAL_ID_KEY = "luna_clinical_id";
 const MAX_USER_MESSAGES = 20;
 const COOLDOWN_HOURS = 48;
 
+const SRQ_QUESTIONS: Record<number, string> = {
+  1: "dores de cabeça frequentes",
+  2: "falta de apetite",
+  3: "dormir mal",
+  4: "assustar-se com facilidade",
+  5: "tremores nas mãos",
+  6: "nervosismo, tensão ou preocupação",
+  7: "má digestão",
+  8: "dificuldade de pensar com clareza",
+  9: "tristeza",
+  10: "chorar mais que o costume",
+  11: "dificuldade nas atividades diárias",
+  12: "dificuldade para tomar decisões",
+  13: "dificuldade no trabalho",
+  14: "sentir-se incapaz de um papel útil",
+  15: "perda de interesse pelas coisas",
+  16: "sentir-se sem valor",
+  17: "pensamentos de acabar com a vida",
+  18: "cansaço o tempo todo",
+  19: "sensações desagradáveis no estômago",
+  20: "cansar-se com facilidade",
+};
+
 const initialMessages: Message[] = [
   {
     id: 1,
@@ -172,6 +195,105 @@ export default function ChatScreen() {
     }
   };
 
+  const buildAnamnesisComparison = (previous: Record<string, number>, current: Record<string, number>) => {
+    const improved: string[] = [];
+    const worsened: string[] = [];
+    const maintained: string[] = [];
+
+    for (const key of Object.keys(current)) {
+      const qId = parseInt(key);
+      const label = SRQ_QUESTIONS[qId];
+      if (!label) continue;
+
+      const prev = previous[key] ?? 0;
+      const curr = current[key] ?? 0;
+
+      if (prev === 1 && curr === 0) improved.push(label);
+      else if (prev === 0 && curr === 1) worsened.push(label);
+      else if (prev === 1 && curr === 1) maintained.push(label);
+    }
+
+    return { improved, worsened, maintained };
+  };
+
+  const fetchAnamnesisComparison = async (stableId: string) => {
+    try {
+      const { data: records } = await supabase
+        .from('anamnesis_responses')
+        .select('score, answers, created_at')
+        .eq('clinical_id', stableId)
+        .order('created_at', { ascending: false })
+        .limit(2);
+
+      if (!records || records.length < 2) return null;
+
+      const current = records[0];
+      const previous = records[1];
+      const comparison = buildAnamnesisComparison(previous.answers, current.answers);
+
+      return {
+        previousScore: previous.score,
+        currentScore: current.score,
+        scoreDiff: previous.score - current.score,
+        ...comparison,
+      };
+    } catch (err) {
+      console.log("[Luna] Erro ao buscar comparação de anamnese:", err);
+      return null;
+    }
+  };
+
+  const sendComparisonToLuna = async (comparison: any, sessionId: string, stableId: string) => {
+    setIsTyping(true);
+
+    let contextParts: string[] = [];
+    contextParts.push(`[CONTEXTO AUTOMÁTICO - Comparação de anamnese]`);
+    contextParts.push(`Score anterior: ${comparison.previousScore}/20 → Score atual: ${comparison.currentScore}/20 (diferença: ${comparison.scoreDiff > 0 ? '+' + comparison.scoreDiff : comparison.scoreDiff} pontos).`);
+
+    if (comparison.improved.length > 0) {
+      contextParts.push(`Melhorou em: ${comparison.improved.join(', ')}.`);
+    }
+    if (comparison.worsened.length > 0) {
+      contextParts.push(`Piorou em: ${comparison.worsened.join(', ')}.`);
+    }
+    if (comparison.maintained.length > 0) {
+      contextParts.push(`Manteve dificuldade em: ${comparison.maintained.join(', ')}.`);
+    }
+
+    contextParts.push(`Use essas informações para iniciar a conversa validando o progresso do usuário de forma empática e acolhedora. Não cite números ou scores diretamente, fale de forma natural sobre as mudanças.`);
+
+    const contextMessage = contextParts.join('\n');
+
+    try {
+      const response = await fetch("[N8N_URL_REMOVED]", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: contextMessage,
+          sessionId: sessionId,
+          clinicalId: stableId,
+        }),
+      });
+
+      const data = await response.json();
+      const replyText = data.output || data.text || data.response || "Olá! Que bom te ver de volta. Como você tem se sentido?";
+
+      const lunaMessage: Message = {
+        id: Date.now() + 1,
+        sender: "luna",
+        text: replyText,
+        timestamp: new Date(),
+      };
+
+      setMessages([lunaMessage]);
+    } catch (error) {
+      console.error("[Luna] Erro ao enviar comparação:", error);
+      setMessages(initialMessages);
+    } finally {
+      setIsTyping(false);
+    }
+  };
+
   const startNewSession = async (stableId: string) => {
     const newSessionId = `session-${Date.now()}`;
     const { data: sessionData, error } = await supabase
@@ -188,7 +310,17 @@ export default function ChatScreen() {
       setCurrentSessionId(sessionData.id);
       setUserMessageCount(0);
       sessionIdRef.current = newSessionId;
-      setMessages(initialMessages);
+
+      // Buscar comparação de anamneses anteriores
+      const comparison = await fetchAnamnesisComparison(stableId);
+      
+      if (comparison) {
+        // Se há comparação, enviar para Luna gerar uma saudação personalizada
+        await sendComparisonToLuna(comparison, newSessionId, stableId);
+      } else {
+        // Primeira vez — saudação padrão
+        setMessages(initialMessages);
+      }
     }
   };
 
