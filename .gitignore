@@ -41,3 +41,8 @@ app-example
 # generated native folders
 /ios
 /android
+
+# temporary workflow files
+*.py
+new_wf*.json
+tsc_errors.txt
