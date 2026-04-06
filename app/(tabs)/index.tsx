@@ -4,9 +4,10 @@ import { useRouter } from "expo-router";
 import { Card } from "../../components/Card";
 import { Button } from "../../components/Button";
 import { MotiView, MotiText } from "moti";
-import { Bell, Settings, Quote, Clock, Heart } from "lucide-react-native";
+import { Bell, Settings, Quote, Clock, Heart, Sparkles } from "lucide-react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useUnlock } from "../../lib/unlockContext";
 
 const dailyQuotes = [
   "Seus pensamentos não são fatos. Eles são apenas hipóteses.",
@@ -28,12 +29,15 @@ export default function Home() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [selectedMood, setSelectedMood] = useState<number | null>(null);
+  const { riskLevel, unlockedCategories, lunaUnlocked } = useUnlock();
   
   const userName = "Ana";
   const currentHour = new Date().getHours();
   const greeting = currentHour < 12 ? "Bom dia" : currentHour < 18 ? "Boa tarde" : "Boa noite";
-  // To avoid hydration mismatch errors on native, we just get a random quote on mount properly, but here we keep it simple
   const dailyQuote = dailyQuotes[Math.floor(Math.random() * dailyQuotes.length)];
+
+  const isNone = riskLevel === 'none';
+  const totalUnlocked = [...new Set([...unlockedCategories, ...lunaUnlocked])].length;
 
   return (
     <View className="flex-1 bg-background">
@@ -77,7 +81,7 @@ export default function Home() {
       </LinearGradient>
 
       <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 40, gap: 24 }}>
-        {/* Check-in Rápido */}
+        {/* Check-in Rápido - funciona sempre */}
         <MotiView from={{ opacity: 0, translateY: 20 }} animate={{ opacity: 1, translateY: 0 }} transition={{ type: "timing", duration: 400, delay: 100 }}>
           <Card className="border-0 shadow-sm">
             <Text className="text-foreground font-semibold mb-4 text-base">Como você está se sentindo agora?</Text>
@@ -104,7 +108,7 @@ export default function Home() {
           </Card>
         </MotiView>
 
-        {/* Inspiração do Dia */}
+        {/* Inspiração do Dia - funciona sempre */}
         <MotiView from={{ opacity: 0, translateY: 20 }} animate={{ opacity: 1, translateY: 0 }} transition={{ type: "timing", duration: 400, delay: 200 }}>
           <Card className="border-0 overflow-hidden" style={{ backgroundColor: "transparent" }}>
             <LinearGradient
@@ -123,68 +127,93 @@ export default function Home() {
           </Card>
         </MotiView>
 
-        {/* Próxima Tarefa */}
-        <MotiView from={{ opacity: 0, translateY: 20 }} animate={{ opacity: 1, translateY: 0 }} transition={{ type: "timing", duration: 400, delay: 300 }}>
-          <Card className="border-0 shadow-sm">
-            <View className="flex-row items-center gap-3 mb-3">
-              <Clock size={20} color="#B8E0D2" />
-              <Text className="text-sm text-muted-foreground">Seu próximo exercício</Text>
-            </View>
-            <Text className="text-lg font-semibold text-foreground mb-1">Respiração para Ansiedade</Text>
-            <Text className="text-sm text-muted-foreground mb-5">Daqui a 2 horas</Text>
-            <Button
-              variant="primary"
-              size="sm"
-              onPress={() => router.push("/(tabs)/plan")}
-              className="w-full"
-            >
-              Começar agora
-            </Button>
-          </Card>
-        </MotiView>
-
-        {/* Módulos em Andamento */}
-        <MotiView from={{ opacity: 0, translateY: 20 }} animate={{ opacity: 1, translateY: 0 }} transition={{ type: "timing", duration: 400, delay: 400 }}>
-          <View className="flex-row items-center justify-between mb-4 mt-2">
-            <Text className="text-lg font-semibold text-foreground">Módulos em Andamento</Text>
-            <Pressable onPress={() => router.push("/(tabs)/plan")}>
-              <Text className="text-sm font-semibold text-[#A9C9FF]">Ver todos</Text>
-            </Pressable>
-          </View>
-          <View className="gap-3">
-            <Card className="border-0 shadow-sm">
-              <View className="flex-row items-center gap-4 py-1">
-                <View className="w-12 h-12 rounded-xl bg-[#B8E0D2]/30 items-center justify-center">
-                  <Text className="text-xl">🌙</Text>
+        {/* Conteúdo condicional baseado no riskLevel */}
+        {isNone ? (
+          /* Mensagem para usuários sem tratamento */
+          <MotiView from={{ opacity: 0, translateY: 20 }} animate={{ opacity: 1, translateY: 0 }} transition={{ type: "timing", duration: 400, delay: 300 }}>
+            <Card className="border-0 shadow-sm" style={{ backgroundColor: 'rgba(22, 163, 74, 0.05)' }}>
+              <View className="items-center py-4">
+                <View className="w-16 h-16 rounded-full items-center justify-center mb-4" style={{ backgroundColor: 'rgba(22, 163, 74, 0.1)' }}>
+                  <Sparkles size={28} color="#16a34a" />
                 </View>
-                <View className="flex-1">
-                  <Text className="text-base font-semibold text-foreground mb-1">Higiene do Sono</Text>
-                  <Text className="text-xs text-muted-foreground">3 de 7 dias completos</Text>
-                </View>
-                <View>
-                  <Text className="text-2xl font-bold text-[#B8E0D2]">43%</Text>
-                </View>
+                <Text className="text-base font-semibold text-slate-800 text-center mb-2">
+                  Você está indo bem! 💚
+                </Text>
+                <Text className="text-sm text-slate-500 text-center leading-5">
+                  Nenhum módulo necessário no momento. Continue mantendo seus hábitos saudáveis!
+                </Text>
               </View>
             </Card>
+          </MotiView>
+        ) : (
+          <>
+            {/* Próxima Tarefa */}
+            <MotiView from={{ opacity: 0, translateY: 20 }} animate={{ opacity: 1, translateY: 0 }} transition={{ type: "timing", duration: 400, delay: 300 }}>
+              <Card className="border-0 shadow-sm">
+                <View className="flex-row items-center gap-3 mb-3">
+                  <Clock size={20} color="#B8E0D2" />
+                  <Text className="text-sm text-muted-foreground">Seu próximo exercício</Text>
+                </View>
+                <Text className="text-lg font-semibold text-foreground mb-1">
+                  {totalUnlocked > 0 ? "Explore suas atividades" : "Complete a anamnese"}
+                </Text>
+                <Text className="text-sm text-muted-foreground mb-5">
+                  {totalUnlocked > 0 
+                    ? `${totalUnlocked} categorias desbloqueadas para você`
+                    : "Inicie sua jornada de autoconhecimento"
+                  }
+                </Text>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onPress={() => router.push("/(tabs)/plan")}
+                  className="w-full"
+                >
+                  Começar agora
+                </Button>
+              </Card>
+            </MotiView>
 
-            <Card className="border-0 shadow-sm">
-              <View className="flex-row items-center gap-4 py-1">
-                <View className="w-12 h-12 rounded-xl bg-[#D6CCFE]/30 items-center justify-center">
-                  <Text className="text-xl">🧠</Text>
-                </View>
-                <View className="flex-1">
-                  <Text className="text-base font-semibold text-foreground mb-1">Crítico Interno</Text>
-                  <Text className="text-xs text-muted-foreground">1 de 7 dias completos</Text>
-                </View>
-                <View>
-                  <Text className="text-2xl font-bold text-[#D6CCFE]">14%</Text>
-                </View>
+            {/* Módulos em Andamento */}
+            <MotiView from={{ opacity: 0, translateY: 20 }} animate={{ opacity: 1, translateY: 0 }} transition={{ type: "timing", duration: 400, delay: 400 }}>
+              <View className="flex-row items-center justify-between mb-4 mt-2">
+                <Text className="text-lg font-semibold text-foreground">Suas Atividades</Text>
+                <Pressable onPress={() => router.push("/(tabs)/plan")}>
+                  <Text className="text-sm font-semibold text-[#A9C9FF]">Ver todos</Text>
+                </Pressable>
               </View>
-            </Card>
-          </View>
-        </MotiView>
+              <View className="gap-3">
+                {totalUnlocked > 0 ? (
+                  <Card className="border-0 shadow-sm">
+                    <View className="flex-row items-center gap-4 py-1">
+                      <View className="w-12 h-12 rounded-xl bg-[#A9C9FF]/30 items-center justify-center">
+                        <Text className="text-xl">🎯</Text>
+                      </View>
+                      <View className="flex-1">
+                        <Text className="text-base font-semibold text-foreground mb-1">
+                          {totalUnlocked} Categorias Ativas
+                        </Text>
+                        <Text className="text-xs text-muted-foreground">
+                          Acesse o Meu Plano para ver seus módulos
+                        </Text>
+                      </View>
+                    </View>
+                  </Card>
+                ) : (
+                  <Card className="border-0 shadow-sm">
+                    <View className="items-center py-4">
+                      <Text className="text-sm text-muted-foreground text-center">
+                        Complete a anamnese para desbloquear suas atividades personalizadas.
+                      </Text>
+                    </View>
+                  </Card>
+                )}
+              </View>
+            </MotiView>
+          </>
+        )}
 
-        {/* Ajuda Profissional */}
+        {/* Ajuda Profissional - sempre visível */}
         <MotiView from={{ opacity: 0, translateY: 20 }} animate={{ opacity: 1, translateY: 0 }} transition={{ type: "timing", duration: 400, delay: 500 }} className="mt-2">
           <Card className="border border-[#FFE5E5] bg-[#FFE5E5]/20 shadow-sm">
             <View className="flex-row items-start gap-4">

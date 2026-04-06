@@ -1,15 +1,15 @@
 import { useState, useRef, useEffect } from "react";
-import { View, Text, TextInput, Pressable, ScrollView, KeyboardAvoidingView, Platform, StyleSheet } from "react-native";
+import { View, Text, TextInput, Pressable, ScrollView, KeyboardAvoidingView, Platform, Modal } from "react-native";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Card } from "../../components/Card";
 import { Button } from "../../components/Button";
 import { MotiView, AnimatePresence } from "moti";
-import { Send, Heart, AlertCircle } from "lucide-react-native";
+import { Send, Heart, AlertCircle, Clock, Lock, X } from "lucide-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { supabase } from "../../lib/supabase";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Clock } from "lucide-react-native";
+import { useUnlock, CATEGORY_NAMES } from "../../lib/unlockContext";
 
 interface Message {
   id: number;
@@ -67,14 +67,22 @@ export default function ChatScreen() {
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [isLoadingSession, setIsLoadingSession] = useState(true);
   const [clinicalId, setClinicalId] = useState<string | null>(null);
+  const [showUnlockModal, setShowUnlockModal] = useState(false);
+  const [newlyUnlockedNames, setNewlyUnlockedNames] = useState<string[]>([]);
   const params = useLocalSearchParams<{ mode?: string }>();
 
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const scrollViewRef = useRef<ScrollView>(null);
   const sessionIdRef = useRef(`session-${Date.now()}-${Math.floor(Math.random() * 1000)}`);
+  
+  const { riskLevel, isLocked, unlockCategory, unlockedCategories, lunaUnlocked } = useUnlock();
 
   useEffect(() => {
+    if (riskLevel === 'none') {
+      setIsLoadingSession(false);
+      return;
+    }
     const init = async () => {
       const id = await loadClinicalId();
       if (id) {
@@ -82,11 +90,10 @@ export default function ChatScreen() {
       }
     };
     init();
-  }, []);
+  }, [riskLevel]);
 
   useEffect(() => {
-    // Se entrar em modo de crise, mostrar alerta e mensagem especial
-    if (params.mode === 'crisis') {
+    if (params.mode === 'crisis' && riskLevel === 'critical') {
       setShowCrisisAlert(true);
       const hasCrisisMsg = messages.some(m => m.text.includes("CVV no 188"));
       if (!hasCrisisMsg) {
@@ -104,9 +111,7 @@ export default function ChatScreen() {
   useEffect(() => {
     let interval: any;
     if (cooldownStartAt) {
-      interval = setInterval(() => {
-        calculateTimeLeft();
-      }, 1000);
+      interval = setInterval(() => { calculateTimeLeft(); }, 1000);
       calculateTimeLeft();
     }
     return () => clearInterval(interval);
@@ -120,30 +125,26 @@ export default function ChatScreen() {
 
   const calculateTimeLeft = () => {
     if (!cooldownStartAt) return;
-    
     const start = new Date(cooldownStartAt).getTime();
     const expiry = start + (COOLDOWN_HOURS * 60 * 60 * 1000);
     const now = new Date().getTime();
     const diff = expiry - now;
-
     if (diff <= 0) {
       setCooldownStartAt(null);
       setUserMessageCount(0);
       setCurrentSessionId(null);
       return;
     }
-
     const h = Math.floor(diff / (1000 * 60 * 60));
     const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     const s = Math.floor((diff % (1000 * 60)) / 1000);
-
     setTimeLeft(`${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`);
   };
 
   const checkSessionStatus = async (stableId: string) => {
     setIsLoadingSession(true);
     try {
-      const { data: lastSession, error } = await supabase
+      const { data: lastSession } = await supabase
         .from('chat_sessions')
         .select('*')
         .eq('clinical_id', stableId)
@@ -161,13 +162,10 @@ export default function ChatScreen() {
             return;
           }
         }
-        
-        // Se a sessão anterior foi concluída mas o cooldown passou, ou ainda está ativa
         setCurrentSessionId(lastSession.id);
         setUserMessageCount(lastSession.user_message_count || 0);
         sessionIdRef.current = lastSession.n8n_session_id;
 
-        // Carregar mensagens salvas no banco
         const { data: dbMessages } = await supabase
           .from('chat_messages')
           .select('*')
@@ -184,11 +182,10 @@ export default function ChatScreen() {
           setMessages(formatted);
         }
       } else {
-        // Criar primeira sessão
         await startNewSession(stableId);
       }
     } catch (err) {
-      console.log("[Luna] Iniciando nova sessão - nenhuma anterior ativa.");
+      console.log("[Luna] Iniciando nova sessão.");
       await startNewSession(stableId);
     } finally {
       setIsLoadingSession(false);
@@ -199,20 +196,16 @@ export default function ChatScreen() {
     const improved: string[] = [];
     const worsened: string[] = [];
     const maintained: string[] = [];
-
     for (const key of Object.keys(current)) {
       const qId = parseInt(key);
       const label = SRQ_QUESTIONS[qId];
       if (!label) continue;
-
       const prev = previous[key] ?? 0;
       const curr = current[key] ?? 0;
-
       if (prev === 1 && curr === 0) improved.push(label);
       else if (prev === 0 && curr === 1) worsened.push(label);
       else if (prev === 1 && curr === 1) maintained.push(label);
     }
-
     return { improved, worsened, maintained };
   };
 
@@ -224,70 +217,37 @@ export default function ChatScreen() {
         .eq('clinical_id', stableId)
         .order('created_at', { ascending: false })
         .limit(2);
-
       if (!records || records.length < 2) return null;
-
       const current = records[0];
       const previous = records[1];
       const comparison = buildAnamnesisComparison(previous.answers, current.answers);
-
-      return {
-        previousScore: previous.score,
-        currentScore: current.score,
-        scoreDiff: previous.score - current.score,
-        ...comparison,
-      };
+      return { previousScore: previous.score, currentScore: current.score, scoreDiff: previous.score - current.score, ...comparison };
     } catch (err) {
-      console.log("[Luna] Erro ao buscar comparação de anamnese:", err);
       return null;
     }
   };
 
   const sendComparisonToLuna = async (comparison: any, sessionId: string, stableId: string) => {
     setIsTyping(true);
-
     let contextParts: string[] = [];
     contextParts.push(`[CONTEXTO AUTOMÁTICO - Comparação de anamnese]`);
     contextParts.push(`Score anterior: ${comparison.previousScore}/20 → Score atual: ${comparison.currentScore}/20 (diferença: ${comparison.scoreDiff > 0 ? '+' + comparison.scoreDiff : comparison.scoreDiff} pontos).`);
-
-    if (comparison.improved.length > 0) {
-      contextParts.push(`Melhorou em: ${comparison.improved.join(', ')}.`);
-    }
-    if (comparison.worsened.length > 0) {
-      contextParts.push(`Piorou em: ${comparison.worsened.join(', ')}.`);
-    }
-    if (comparison.maintained.length > 0) {
-      contextParts.push(`Manteve dificuldade em: ${comparison.maintained.join(', ')}.`);
-    }
-
-    contextParts.push(`Use essas informações para iniciar a conversa validando o progresso do usuário de forma empática e acolhedora. Não cite números ou scores diretamente, fale de forma natural sobre as mudanças.`);
-
+    if (comparison.improved.length > 0) contextParts.push(`Melhorou em: ${comparison.improved.join(', ')}.`);
+    if (comparison.worsened.length > 0) contextParts.push(`Piorou em: ${comparison.worsened.join(', ')}.`);
+    if (comparison.maintained.length > 0) contextParts.push(`Manteve dificuldade em: ${comparison.maintained.join(', ')}.`);
+    contextParts.push(`Use essas informações para iniciar a conversa validando o progresso do usuário de forma empática e acolhedora. Não cite números ou scores diretamente.`);
     const contextMessage = contextParts.join('\n');
-
     try {
       const response = await fetch("[N8N_URL_REMOVED]", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: contextMessage,
-          sessionId: sessionId,
-          clinicalId: stableId,
-        }),
+        body: JSON.stringify({ message: contextMessage, sessionId, clinicalId: stableId }),
       });
-
       const data = await response.json();
       const replyText = data.output || data.text || data.response || "Olá! Que bom te ver de volta. Como você tem se sentido?";
-
-      const lunaMessage: Message = {
-        id: Date.now() + 1,
-        sender: "luna",
-        text: replyText,
-        timestamp: new Date(),
-      };
-
+      const lunaMessage: Message = { id: Date.now() + 1, sender: "luna", text: replyText, timestamp: new Date() };
       setMessages([lunaMessage]);
     } catch (error) {
-      console.error("[Luna] Erro ao enviar comparação:", error);
       setMessages(initialMessages);
     } finally {
       setIsTyping(false);
@@ -296,29 +256,19 @@ export default function ChatScreen() {
 
   const startNewSession = async (stableId: string) => {
     const newSessionId = `session-${Date.now()}`;
-    const { data: sessionData, error } = await supabase
+    const { data: sessionData } = await supabase
       .from('chat_sessions')
-      .insert({
-        clinical_id: stableId,
-        n8n_session_id: newSessionId,
-        user_message_count: 0
-      })
+      .insert({ clinical_id: stableId, n8n_session_id: newSessionId, user_message_count: 0 })
       .select()
       .single();
-
     if (sessionData) {
       setCurrentSessionId(sessionData.id);
       setUserMessageCount(0);
       sessionIdRef.current = newSessionId;
-
-      // Buscar comparação de anamneses anteriores
       const comparison = await fetchAnamnesisComparison(stableId);
-      
       if (comparison) {
-        // Se há comparação, enviar para Luna gerar uma saudação personalizada
         await sendComparisonToLuna(comparison, newSessionId, stableId);
       } else {
-        // Primeira vez — saudação padrão
         setMessages(initialMessages);
       }
     }
@@ -331,126 +281,154 @@ export default function ChatScreen() {
       .from('chat_sessions')
       .update({ cooldown_start_at: now })
       .eq('id', currentSessionId);
-
-    if (!error) {
-      setCooldownStartAt(now);
-    }
+    if (!error) setCooldownStartAt(now);
   };
 
   const detectCrisis = (text: string) => {
-    return crisisKeywords.some((keyword) =>
-      text.toLowerCase().includes(keyword)
-    );
+    return crisisKeywords.some((keyword) => text.toLowerCase().includes(keyword));
+  };
+
+  const parseUnlockTag = (text: string): { cleanText: string; categoryIds: number[] } => {
+    const regex = /\[UNLOCK:(\d+(?:,\d+)*)\]/g;
+    const match = regex.exec(text);
+    if (!match) return { cleanText: text, categoryIds: [] };
+    
+    const ids = match[1].split(',').map(Number).filter(n => !isNaN(n) && n >= 1 && n <= 8);
+    const cleanText = text.replace(regex, '').trim();
+    return { cleanText, categoryIds: ids };
+  };
+
+  const processUnlockCategories = async (categoryIds: number[]) => {
+    if (categoryIds.length === 0) return;
+    
+    const allUnlocked = [...new Set([...unlockedCategories, ...lunaUnlocked])];
+    const genuinelyNew = categoryIds.filter(id => !allUnlocked.includes(id));
+    
+    if (genuinelyNew.length > 0) {
+      await unlockCategory(genuinelyNew);
+      const names = genuinelyNew.map(id => CATEGORY_NAMES[id] || `Categoria ${id}`);
+      setNewlyUnlockedNames(names);
+      setShowUnlockModal(true);
+
+      if (currentSessionId) {
+        const updated = [...new Set([...lunaUnlocked, ...genuinelyNew])];
+        await supabase
+          .from('chat_sessions')
+          .update({ luna_unlocked_categories: updated })
+          .eq('id', currentSessionId);
+      }
+    }
   };
 
   const handleSend = async () => {
     if (!inputValue.trim()) return;
-
-    if (detectCrisis(inputValue)) {
-      setShowCrisisAlert(true);
-    }
+    if (detectCrisis(inputValue)) setShowCrisisAlert(true);
 
     const userText = inputValue;
-    const userMessage: Message = {
-      id: Date.now(),
-      sender: "user",
-      text: userText,
-      timestamp: new Date(),
-    };
-
+    const userMessage: Message = { id: Date.now(), sender: "user", text: userText, timestamp: new Date() };
     setMessages((prev) => [...prev, userMessage]);
     setInputValue("");
     setIsTyping(true);
     
-    // Incrementar e salvar no banco
     const newCount = userMessageCount + 1;
     setUserMessageCount(newCount);
     
     if (currentSessionId) {
-      await supabase.from('chat_messages').insert({
-        session_id: currentSessionId,
-        sender: 'user',
-        content: userText,
-        clinical_id: clinicalId
-      });
-      await supabase.from('chat_sessions').update({ 
-        user_message_count: newCount,
-        last_active_at: new Date().toISOString()
-      }).eq('id', currentSessionId);
+      await supabase.from('chat_messages').insert({ session_id: currentSessionId, sender: 'user', content: userText, clinical_id: clinicalId });
+      await supabase.from('chat_sessions').update({ user_message_count: newCount, last_active_at: new Date().toISOString() }).eq('id', currentSessionId);
     }
 
-    setTimeout(() => {
-      scrollViewRef.current?.scrollToEnd({ animated: true });
-    }, 100);
+    setTimeout(() => { scrollViewRef.current?.scrollToEnd({ animated: true }); }, 100);
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
-
       const response = await fetch("[N8N_URL_REMOVED]", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          message: userText,
-          sessionId: sessionIdRef.current,
-          userId: user?.id || null, 
-          clinicalId: clinicalId, 
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: userText, sessionId: sessionIdRef.current, userId: user?.id || null, clinicalId: clinicalId }),
       });
-
       const data = await response.json();
+      const rawReply = data.output || data.text || data.response || "Compreendo. Me conte um pouco mais.";
       
-      const replyText = data.output || data.text || data.response || "Compreendo. Me conte um pouco mais.";
-
-      const lunaMessage: Message = {
-        id: Date.now() + 1,
-        sender: "luna",
-        text: replyText,
-        timestamp: new Date(),
-      };
+      // Parsear tags de desbloqueio e limpar o texto
+      const { cleanText, categoryIds } = parseUnlockTag(rawReply);
+      
+      const lunaMessage: Message = { id: Date.now() + 1, sender: "luna", text: cleanText, timestamp: new Date() };
       
       if (currentSessionId) {
-        await supabase.from('chat_messages').insert({
-          session_id: currentSessionId,
-          sender: 'luna',
-          content: replyText,
-          clinical_id: clinicalId
-        });
+        await supabase.from('chat_messages').insert({ session_id: currentSessionId, sender: 'luna', content: cleanText, clinical_id: clinicalId });
       }
 
       setMessages((prev) => [...prev, lunaMessage]);
+      
+      // Processar desbloqueio de categorias via Luna
+      await processUnlockCategories(categoryIds);
     } catch (error) {
       console.error("Error communicating with n8n Luna agent:", error);
       const errorMessage: Message = {
-        id: Date.now() + 1,
-        sender: "luna",
-        text: "Me desculpe, estou com instabilidade de conexão no momento. Ah, e por favor verifique se configurou a API Key do Gemini lá no meu Agent (n8n)! 🥺",
+        id: Date.now() + 1, sender: "luna",
+        text: "Me desculpe, estou com instabilidade de conexão no momento. Tente novamente em instantes. 🥺",
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorMessage]);
     } finally {
       setIsTyping(false);
-      setTimeout(() => {
-        scrollViewRef.current?.scrollToEnd({ animated: true });
-      }, 100);
+      setTimeout(() => { scrollViewRef.current?.scrollToEnd({ animated: true }); }, 100);
     }
   };
 
+  // === TELA: Luna bloqueada para riskLevel "none" ===
+  if (riskLevel === 'none') {
+    return (
+      <View className="flex-1 bg-background">
+        <LinearGradient 
+          colors={['rgba(169, 201, 255, 0.1)', 'transparent']}
+          style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 }}
+        >
+          <MotiView
+            from={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="items-center bg-white p-10 rounded-[40px] shadow-sm border border-gray-100"
+          >
+            <View className="w-20 h-20 rounded-full items-center justify-center mb-6" style={{ backgroundColor: 'rgba(22, 163, 74, 0.1)' }}>
+              <Lock size={36} color="#16a34a" />
+            </View>
+            <Text className="text-2xl font-bold text-slate-900 text-center mb-3">
+              Você está em equilíbrio! 💚
+            </Text>
+            <Text className="text-slate-500 text-center mb-6 leading-6">
+              A Luna estará disponível caso sua próxima avaliação indique necessidade. Continue assim!
+            </Text>
+            <View className="bg-green-50 px-6 py-3 rounded-2xl border border-green-100">
+              <Text className="text-sm text-green-700 text-center font-medium">
+                Próxima avaliação em 15 dias
+              </Text>
+            </View>
+          </MotiView>
+          
+          <Pressable 
+            onPress={() => router.push('/')}
+            className="mt-12 flex-row items-center gap-2"
+          >
+            <Text className="text-slate-400 font-semibold">Ir para o Início</Text>
+          </Pressable>
+        </LinearGradient>
+      </View>
+    );
+  }
+
+  // === TELA: Loading ===
   if (isLoadingSession) {
     return (
       <View className="flex-1 bg-background items-center justify-center">
-        <MotiView
-          from={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="items-center"
-        >
+        <MotiView from={{ opacity: 0 }} animate={{ opacity: 1 }} className="items-center">
           <Text className="text-muted-foreground mt-4 font-medium">Iniciando conexão segura...</Text>
         </MotiView>
       </View>
     );
   }
 
+  // === TELA: Cooldown 48h ===
   if (cooldownStartAt) {
     return (
       <View className="flex-1 bg-background">
@@ -468,7 +446,7 @@ export default function ChatScreen() {
             </View>
             <Text className="text-2xl font-bold text-slate-900 text-center mb-2">Pausa para Reflexão</Text>
             <Text className="text-slate-500 text-center mb-8 leading-6">
-              Sua sessão foi processada. Para que sua jornada seja mais proveitosa, Luna estará disponível novamente em:
+              Sua sessão foi processada. Luna estará disponível novamente em:
             </Text>
             <View className="bg-slate-50 px-8 py-4 rounded-3xl border border-slate-100">
               <Text className="text-4xl font-mono font-bold text-[#A9C9FF]" style={{ letterSpacing: 2 }}>
@@ -479,11 +457,7 @@ export default function ChatScreen() {
               Enquanto isso, você pode explorar a Biblioteca e seus Planos de Fortalecimento.
             </Text>
           </MotiView>
-          
-          <Pressable 
-            onPress={() => router.push('/')}
-            className="mt-12 flex-row items-center gap-2"
-          >
+          <Pressable onPress={() => router.push('/')} className="mt-12 flex-row items-center gap-2">
             <Text className="text-slate-400 font-semibold">Ir para o Início</Text>
           </Pressable>
         </LinearGradient>
@@ -491,6 +465,7 @@ export default function ChatScreen() {
     );
   }
 
+  // === TELA: Chat Ativo ===
   return (
     <KeyboardAvoidingView 
       className="flex-1 bg-[#FAFAFA]"
@@ -514,7 +489,9 @@ export default function ChatScreen() {
           </View>
           <View>
             <Text className="text-xl font-bold text-foreground mb-0.5">Luna</Text>
-            <Text className="text-xs text-muted-foreground font-medium">Sessão Ativa • {userMessageCount}/20</Text>
+            <Text className="text-xs text-muted-foreground font-medium">
+              {riskLevel === 'critical' ? '🔴 Modo Crise' : `Sessão Ativa • ${userMessageCount}/20`}
+            </Text>
           </View>
         </View>
         
@@ -526,7 +503,7 @@ export default function ChatScreen() {
         </Pressable>
       </LinearGradient>
 
-      {/* Crisis Alert */}
+      {/* Crisis Alert - para modo crise */}
       <AnimatePresence>
         {showCrisisAlert && (
           <MotiView
@@ -538,14 +515,11 @@ export default function ChatScreen() {
             <Card className="bg-[#FFE5E5] border border-[#d4183d] p-4 flex-row items-start gap-3">
               <AlertCircle size={24} color="#d4183d" className="mt-0.5" />
               <View className="flex-1">
+                <Text className="text-sm text-[#450a1a] mb-1 font-semibold">CVV 188 — Ligação 24h</Text>
                 <Text className="text-sm text-[#450a1a] mb-3 font-medium leading-5">
-                  Percebo que você pode estar passando por um momento muito difícil.
+                  Você não precisa enfrentar isso sozinho(a).
                 </Text>
-                <Button 
-                  onPress={() => {}} 
-                  className="bg-[#d4183d] w-full" 
-                  size="sm"
-                >
+                <Button onPress={() => {}} className="bg-[#d4183d] w-full" size="sm">
                   <Text className="text-white font-semibold flex-1 text-center py-1">Falar com psicólogo agora</Text>
                 </Button>
               </View>
@@ -568,7 +542,6 @@ export default function ChatScreen() {
               key={message.id}
               from={{ opacity: 0, translateY: 15 }}
               animate={{ opacity: 1, translateY: 0 }}
-              transition={{ delay: index === messages.length - 1 ? 0 : 0 }}
               className={`flex-row ${isUser ? "justify-end" : "justify-start"}`}
             >
               <View
@@ -581,13 +554,8 @@ export default function ChatScreen() {
                 <Text className={`text-[15px] leading-6 ${isUser ? "text-white" : "text-foreground"}`}>
                   {message.text}
                 </Text>
-                <Text 
-                  className={`text-[10px] mt-2 font-medium ${isUser ? "text-white/70 text-right" : "text-muted-foreground/70"}`}
-                >
-                  {message.timestamp.toLocaleTimeString("pt-BR", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
+                <Text className={`text-[10px] mt-2 font-medium ${isUser ? "text-white/70 text-right" : "text-muted-foreground/70"}`}>
+                  {message.timestamp.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
                 </Text>
               </View>
             </MotiView>
@@ -595,27 +563,11 @@ export default function ChatScreen() {
         })}
 
         {isTyping && (
-          <MotiView
-            from={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex-row justify-start"
-          >
+          <MotiView from={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-row justify-start">
             <View className="bg-white shadow-sm border border-gray-100 p-4 rounded-t-[20px] rounded-br-[20px] rounded-bl-[4px] flex-row gap-1.5 items-center">
-              <MotiView 
-                from={{ translateY: 0 }} animate={{ translateY: -5 }} 
-                transition={{ loop: true, type: 'timing', duration: 400 }}
-                className="w-2 h-2 rounded-full bg-[#A9C9FF]" 
-              />
-              <MotiView 
-                from={{ translateY: 0 }} animate={{ translateY: -5 }} 
-                transition={{ loop: true, type: 'timing', duration: 400, delay: 150 }}
-                className="w-2 h-2 rounded-full bg-[#A9C9FF]" 
-              />
-              <MotiView 
-                from={{ translateY: 0 }} animate={{ translateY: -5 }} 
-                transition={{ loop: true, type: 'timing', duration: 400, delay: 300 }}
-                className="w-2 h-2 rounded-full bg-[#A9C9FF]" 
-              />
+              <MotiView from={{ translateY: 0 }} animate={{ translateY: -5 }} transition={{ loop: true, type: 'timing', duration: 400 }} className="w-2 h-2 rounded-full bg-[#A9C9FF]" />
+              <MotiView from={{ translateY: 0 }} animate={{ translateY: -5 }} transition={{ loop: true, type: 'timing', duration: 400, delay: 150 }} className="w-2 h-2 rounded-full bg-[#A9C9FF]" />
+              <MotiView from={{ translateY: 0 }} animate={{ translateY: -5 }} transition={{ loop: true, type: 'timing', duration: 400, delay: 300 }} className="w-2 h-2 rounded-full bg-[#A9C9FF]" />
             </View>
           </MotiView>
         )}
@@ -627,18 +579,11 @@ export default function ChatScreen() {
         style={{ paddingBottom: insets.bottom > 0 ? insets.bottom + 8 : 16 }}
       >
         {userMessageCount >= MAX_USER_MESSAGES ? (
-          <MotiView
-            from={{ opacity: 0, translateY: 10 }}
-            animate={{ opacity: 1, translateY: 0 }}
-          >
+          <MotiView from={{ opacity: 0, translateY: 10 }} animate={{ opacity: 1, translateY: 0 }}>
             <Text className="text-slate-500 text-center text-sm mb-4 leading-5">
               A sessão acabou por aqui, clique em encerrar e aguarde a próxima.
             </Text>
-            <Button 
-              onPress={handleEndSession}
-              variant="primary"
-              className="w-full bg-[#A9C9FF]"
-            >
+            <Button onPress={handleEndSession} variant="primary" className="w-full bg-[#A9C9FF]">
               Encerrar Sessão
             </Button>
           </MotiView>
@@ -665,6 +610,64 @@ export default function ChatScreen() {
           </View>
         )}
       </View>
+
+      {/* Modal de Desbloqueio de Categorias via Luna */}
+      <Modal
+        visible={showUnlockModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowUnlockModal(false)}
+      >
+        <View className="flex-1 bg-black/50 items-center justify-center px-6">
+          <MotiView
+            from={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 200 }}
+          >
+            <View className="bg-white rounded-[32px] p-8 items-center w-full max-w-sm" style={{ elevation: 10 }}>
+              <Pressable 
+                className="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 items-center justify-center"
+                onPress={() => setShowUnlockModal(false)}
+              >
+                <X size={16} color="#64748b" />
+              </Pressable>
+
+              <View className="w-20 h-20 rounded-full items-center justify-center mb-5" style={{ backgroundColor: 'rgba(169, 201, 255, 0.15)' }}>
+                <Lock size={36} color="#A9C9FF" />
+              </View>
+
+              <Text className="text-xl font-bold text-slate-900 text-center mb-2">
+                Novo conteúdo disponível
+              </Text>
+
+              <Text className="text-slate-500 text-center mb-6 leading-5">
+                Com base na nossa conversa, novos exercícios foram liberados para você:
+              </Text>
+
+              <View className="w-full gap-2 mb-6">
+                {newlyUnlockedNames.map((name, i) => (
+                  <View key={i} className="bg-[#A9C9FF]/10 px-4 py-3 rounded-2xl flex-row items-center gap-2">
+                    <Text className="text-base">📂</Text>
+                    <Text className="text-base font-semibold text-slate-800">{name}</Text>
+                  </View>
+                ))}
+              </View>
+
+              <Button
+                variant="primary"
+                size="lg"
+                onPress={() => {
+                  setShowUnlockModal(false);
+                  router.push("/(tabs)/library");
+                }}
+                className="w-full"
+              >
+                <Text className="text-white font-bold">Ver Exercícios</Text>
+              </Button>
+            </View>
+          </MotiView>
+        </View>
+      </Modal>
     </KeyboardAvoidingView>
   );
 }

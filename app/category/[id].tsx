@@ -7,10 +7,9 @@ import { categoryModules } from "../data/mockData";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 
-const getCategoryDetails = (id: string | string[]) => {
-  const numericId = Number(Array.isArray(id) ? id[0] : id);
+const getCategoryDetails = (numericId: number) => {
   switch (numericId) {
-    case 101:
+    case 1:
       return { name: "Ansiedade", icon: <Brain size={28} color="#9381ff" />, color: "#D6CCFE" };
     case 2:
       return { name: "Autoconfiança", icon: <Heart size={28} color="#e11d48" />, color: "#FED9E8" };
@@ -37,7 +36,7 @@ export default function CategoryScreen() {
   const insets = useSafeAreaInsets();
   
   const categoryId = Array.isArray(id) ? id[0] : id;
-  const numericId = Number(categoryId) || 101;
+  const numericId = Number(categoryId) || 1;
   const categoryDetails = getCategoryDetails(numericId);
   const modules = categoryModules[numericId] || [];
 

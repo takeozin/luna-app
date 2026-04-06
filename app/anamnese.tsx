@@ -9,6 +9,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { supabase } from "../lib/supabase";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { calculateRiskLevel, calculateUnlockedCategories } from "../lib/unlockContext";
 
 interface Question {
   id: number;
@@ -131,13 +132,20 @@ export default function Anamnese() {
         userId = authData.user?.id;
       }
 
-      console.log("[Luna] Salvando anamnese para ID:", stableId);
+      // Calcular risk_level e unlocked_categories AQUI no INSERT
+      const isQ17 = answersData[17] === 1;
+      const riskLevel = calculateRiskLevel(score, isQ17);
+      const unlockedCategories = riskLevel === 'none' ? [] : calculateUnlockedCategories(answersData);
+
+      console.log(`[Luna] Salvando anamnese: ID=${stableId}, score=${score}, risk=${riskLevel}, categories=${JSON.stringify(unlockedCategories)}`);
 
       const { error: dbError } = await supabase.from('anamnesis_responses').insert({
         user_id: userId,
         clinical_id: stableId,
         score: score,
-        answers: answersData
+        answers: answersData,
+        risk_level: riskLevel,
+        unlocked_categories: unlockedCategories,
       });
       
       if (dbError) {
@@ -170,7 +178,8 @@ export default function Anamnese() {
           pathname: "/anamnese-result",
           params: { 
             score: finalScore,
-            q17: isQ17Positive ? "true" : "false"
+            q17: isQ17Positive ? "true" : "false",
+            answers: JSON.stringify(newAnswers),
           },
         });
       }, 500);

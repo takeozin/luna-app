@@ -80,10 +80,10 @@ export default function ModuleDetail() {
   let moduleData: any = null;
   let isFromLibrary = false;
 
-  // Check if it's from the plan (IDs 1-3)
-  if (numericId <= 3) {
-    moduleData = modules.find(m => m.id === numericId);
-  } else {
+  // Check plan modules first (IDs 1-8 from plan.tsx / mockData.modules)
+  moduleData = modules.find(m => m.id === numericId);
+  
+  if (!moduleData) {
     // Check library modules (IDs 101+)
     Object.values(categoryModules).forEach((categoryMods) => {
       const found = categoryMods.find(m => m.id === numericId);
