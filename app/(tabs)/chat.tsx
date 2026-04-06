@@ -238,7 +238,7 @@ export default function ChatScreen() {
     contextParts.push(`Use essas informações para iniciar a conversa validando o progresso do usuário de forma empática e acolhedora. Não cite números ou scores diretamente.`);
     const contextMessage = contextParts.join('\n');
     try {
-      const response = await fetch("[N8N_URL_REMOVED]", {
+      const response = await fetch(process.env.EXPO_PUBLIC_N8N_WEBHOOK_URL!, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: contextMessage, sessionId, clinicalId: stableId }),
@@ -342,7 +342,7 @@ export default function ChatScreen() {
 
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      const response = await fetch("[N8N_URL_REMOVED]", {
+      const response = await fetch(process.env.EXPO_PUBLIC_N8N_WEBHOOK_URL!, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: userText, sessionId: sessionIdRef.current, userId: user?.id || null, clinicalId: clinicalId }),
