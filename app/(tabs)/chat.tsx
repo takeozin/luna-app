@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { View, Text, TextInput, Pressable, ScrollView, KeyboardAvoidingView, Platform, Modal } from "react-native";
-import { useRouter, useLocalSearchParams } from "expo-router";
+import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router";
+import { useCallback } from "react";
 import { Card } from "../../components/Card";
 import { Button } from "../../components/Button";
 import { MotiView, AnimatePresence } from "moti";
@@ -8,7 +9,6 @@ import { Send, Heart, AlertCircle, Clock, Lock, X } from "lucide-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { supabase } from "../../lib/supabase";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useUnlock, CATEGORY_NAMES } from "../../lib/unlockContext";
 
 interface Message {
@@ -18,7 +18,6 @@ interface Message {
   timestamp: Date;
 }
 
-const CLINICAL_ID_KEY = "luna_clinical_id";
 const MAX_USER_MESSAGES = 20;
 const COOLDOWN_HOURS = 48;
 
@@ -60,13 +59,14 @@ export default function ChatScreen() {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [historicalContext, setHistoricalContext] = useState("");
   const [showCrisisAlert, setShowCrisisAlert] = useState(false);
   const [userMessageCount, setUserMessageCount] = useState(0);
   const [cooldownStartAt, setCooldownStartAt] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState("");
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [isLoadingSession, setIsLoadingSession] = useState(true);
-  const [clinicalId, setClinicalId] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   const [showUnlockModal, setShowUnlockModal] = useState(false);
   const [newlyUnlockedNames, setNewlyUnlockedNames] = useState<string[]>([]);
   const params = useLocalSearchParams<{ mode?: string }>();
@@ -75,22 +75,28 @@ export default function ChatScreen() {
   const router = useRouter();
   const scrollViewRef = useRef<ScrollView>(null);
   const sessionIdRef = useRef(`session-${Date.now()}-${Math.floor(Math.random() * 1000)}`);
+  const contextInjectedRef = useRef(false);
   
-  const { riskLevel, isLocked, unlockCategory, unlockedCategories, lunaUnlocked } = useUnlock();
+  const { riskLevel, unlockCategory, unlockedCategories, lunaUnlocked } = useUnlock();
 
-  useEffect(() => {
-    if (riskLevel === 'none') {
-      setIsLoadingSession(false);
-      return;
-    }
-    const init = async () => {
-      const id = await loadClinicalId();
-      if (id) {
-        await checkSessionStatus(id);
-      }
-    };
-    init();
-  }, [riskLevel]);
+  useFocusEffect(
+    useCallback(() => {
+      const init = async () => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          setUserId(user.id);
+          // Prioridade 1: Buscar Memória
+          const context = await getLunaHistoricalContext(user.id);
+          setHistoricalContext(context);
+          // Prioridade 2: Sincronizar Sessão
+          await checkSessionStatus(user.id);
+        } else {
+          setIsLoadingSession(false);
+        }
+      };
+      init();
+    }, [riskLevel])
+  );
 
   useEffect(() => {
     if (params.mode === 'crisis' && riskLevel === 'critical') {
@@ -111,34 +117,97 @@ export default function ChatScreen() {
   useEffect(() => {
     let interval: any;
     if (cooldownStartAt) {
-      interval = setInterval(() => { calculateTimeLeft(); }, 1000);
+      const calculateTimeLeft = () => {
+        const start = new Date(cooldownStartAt).getTime();
+        const expiry = start + (COOLDOWN_HOURS * 60 * 60 * 1000);
+        const now = new Date().getTime();
+        const diff = expiry - now;
+        if (diff <= 0) {
+          setCooldownStartAt(null);
+          setUserMessageCount(0);
+          setCurrentSessionId(null);
+          return;
+        }
+        const h = Math.floor(diff / (1000 * 60 * 60));
+        const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const s = Math.floor((diff % (1000 * 60)) / 1000);
+        setTimeLeft(`${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`);
+      };
+      
+      interval = setInterval(calculateTimeLeft, 1000);
       calculateTimeLeft();
     }
     return () => clearInterval(interval);
   }, [cooldownStartAt]);
 
-  const loadClinicalId = async () => {
-    const id = await AsyncStorage.getItem(CLINICAL_ID_KEY);
-    setClinicalId(id);
-    return id;
+  const getLunaHistoricalContext = async (stableId: string) => {
+    try {
+      // 1. Pegar humores recentes (últimos 3 dias)
+      const { data: moods } = await supabase
+        .from('mood_entries')
+        .select('mood_value, emoji, created_at')
+        .eq('user_id', stableId)
+        .order('created_at', { ascending: false })
+        .limit(5);
+
+      const moodMap: Record<number, string> = {
+        1: "Péssimo",
+        2: "Mal",
+        3: "Ok",
+        4: "Bem",
+        5: "Ótimo"
+      };
+
+      // 2. Pegar resumo de conversas passadas (últimas 3 mensagens dela)
+      const { data: pastMsgs } = await supabase
+        .from('chat_messages')
+        .select('content, sender, created_at')
+        .eq('user_id', stableId)
+        .eq('sender', 'user')
+        .order('created_at', { ascending: false })
+        .limit(3);
+
+      let context = "[MEMÓRIA DE LONGO PRAZO]\n";
+      
+      if (moods && moods.length > 0) {
+        context += "Humores recentes registrados: " + moods.map(m => `${m.emoji} (${moodMap[m.mood_value] || 'N/A'})`).join(", ") + ".\n";
+      }
+
+      if (pastMsgs && pastMsgs.length > 0) {
+        context += "Últimas coisas que o usuário me contou: " + pastMsgs.map(m => m.content).join(" | ") + ".\n";
+      }
+
+      context += "Se houver algo relevante (ex: ele estava triste ontem), mencione isso de forma direta e acolhedora no início, perguntando como as coisas evoluíram.";
+      
+      return context;
+    } catch (err: any) {
+      return `[ERRO DE MEMÓRIA]: ${err.message || 'Erro desconhecido'}`;
+    }
   };
 
-  const calculateTimeLeft = () => {
-    if (!cooldownStartAt) return;
-    const start = new Date(cooldownStartAt).getTime();
-    const expiry = start + (COOLDOWN_HOURS * 60 * 60 * 1000);
-    const now = new Date().getTime();
-    const diff = expiry - now;
-    if (diff <= 0) {
-      setCooldownStartAt(null);
+  const startNewSession = async (stableId: string) => {
+    const newSessionId = `session-${Date.now()}`;
+    const { data: sessionData } = await supabase
+      .from('chat_sessions')
+      .insert({ 
+        user_id: stableId, // UUID oficial
+        n8n_session_id: newSessionId, 
+        user_message_count: 0 
+      })
+      .select()
+      .single();
+
+    if (sessionData) {
+      setCurrentSessionId(sessionData.id);
       setUserMessageCount(0);
-      setCurrentSessionId(null);
-      return;
+      sessionIdRef.current = newSessionId;
+      
+      // MEMÓRIA: Pegar contexto histórico para a Luna
+      const historicalContext = await getLunaHistoricalContext(stableId);
+      const comparison = await fetchAnamnesisComparison(stableId);
+      
+      await sendInitialContextToLuna(historicalContext, comparison, newSessionId, stableId);
     }
-    const h = Math.floor(diff / (1000 * 60 * 60));
-    const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    const s = Math.floor((diff % (1000 * 60)) / 1000);
-    setTimeLeft(`${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`);
   };
 
   const checkSessionStatus = async (stableId: string) => {
@@ -147,7 +216,7 @@ export default function ChatScreen() {
       const { data: lastSession } = await supabase
         .from('chat_sessions')
         .select('*')
-        .eq('clinical_id', stableId)
+        .eq('user_id', stableId)
         .order('created_at', { ascending: false })
         .limit(1)
         .single();
@@ -185,7 +254,6 @@ export default function ChatScreen() {
         await startNewSession(stableId);
       }
     } catch (err) {
-      console.log("[Luna] Iniciando nova sessão.");
       await startNewSession(stableId);
     } finally {
       setIsLoadingSession(false);
@@ -214,7 +282,7 @@ export default function ChatScreen() {
       const { data: records } = await supabase
         .from('anamnesis_responses')
         .select('score, answers, created_at')
-        .eq('clinical_id', stableId)
+        .eq('user_id', stableId)
         .order('created_at', { ascending: false })
         .limit(2);
       if (!records || records.length < 2) return null;
@@ -227,50 +295,32 @@ export default function ChatScreen() {
     }
   };
 
-  const sendComparisonToLuna = async (comparison: any, sessionId: string, stableId: string) => {
+  const sendInitialContextToLuna = async (historicalContext: string, comparison: any, sessionId: string, stableId: string) => {
     setIsTyping(true);
-    let contextParts: string[] = [];
-    contextParts.push(`[CONTEXTO AUTOMÁTICO - Comparação de anamnese]`);
-    contextParts.push(`Score anterior: ${comparison.previousScore}/20 → Score atual: ${comparison.currentScore}/20 (diferença: ${comparison.scoreDiff > 0 ? '+' + comparison.scoreDiff : comparison.scoreDiff} pontos).`);
-    if (comparison.improved.length > 0) contextParts.push(`Melhorou em: ${comparison.improved.join(', ')}.`);
-    if (comparison.worsened.length > 0) contextParts.push(`Piorou em: ${comparison.worsened.join(', ')}.`);
-    if (comparison.maintained.length > 0) contextParts.push(`Manteve dificuldade em: ${comparison.maintained.join(', ')}.`);
-    contextParts.push(`Use essas informações para iniciar a conversa validando o progresso do usuário de forma empática e acolhedora. Não cite números ou scores diretamente.`);
+    let contextParts: string[] = [historicalContext];
+
+    if (comparison) {
+      contextParts.push(`\n[COMPARAÇÃO DE ANAMNESE]`);
+      contextParts.push(`Score anterior: ${comparison.previousScore} -> Score atual: ${comparison.currentScore}.`);
+      if (comparison.improved.length > 0) contextParts.push(`Melhorou em: ${comparison.improved.join(', ')}.`);
+      if (comparison.worsened.length > 0) contextParts.push(`Piorou em: ${comparison.worsened.join(', ')}.`);
+    }
+
     const contextMessage = contextParts.join('\n');
     try {
       const response = await fetch(process.env.EXPO_PUBLIC_N8N_WEBHOOK_URL!, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: contextMessage, sessionId, clinicalId: stableId }),
+        body: JSON.stringify({ message: contextMessage, sessionId, userId: stableId }),
       });
       const data = await response.json();
-      const replyText = data.output || data.text || data.response || "Olá! Que bom te ver de volta. Como você tem se sentido?";
+      const replyText = data.output || data.text || data.response || "Olá! Como você tem se sentido hoje?";
       const lunaMessage: Message = { id: Date.now() + 1, sender: "luna", text: replyText, timestamp: new Date() };
       setMessages([lunaMessage]);
     } catch (error) {
       setMessages(initialMessages);
     } finally {
       setIsTyping(false);
-    }
-  };
-
-  const startNewSession = async (stableId: string) => {
-    const newSessionId = `session-${Date.now()}`;
-    const { data: sessionData } = await supabase
-      .from('chat_sessions')
-      .insert({ clinical_id: stableId, n8n_session_id: newSessionId, user_message_count: 0 })
-      .select()
-      .single();
-    if (sessionData) {
-      setCurrentSessionId(sessionData.id);
-      setUserMessageCount(0);
-      sessionIdRef.current = newSessionId;
-      const comparison = await fetchAnamnesisComparison(stableId);
-      if (comparison) {
-        await sendComparisonToLuna(comparison, newSessionId, stableId);
-      } else {
-        setMessages(initialMessages);
-      }
     }
   };
 
@@ -321,7 +371,7 @@ export default function ChatScreen() {
   };
 
   const handleSend = async () => {
-    if (!inputValue.trim()) return;
+    if (!inputValue.trim() || !userId) return;
     if (detectCrisis(inputValue)) setShowCrisisAlert(true);
 
     const userText = inputValue;
@@ -334,37 +384,47 @@ export default function ChatScreen() {
     setUserMessageCount(newCount);
     
     if (currentSessionId) {
-      await supabase.from('chat_messages').insert({ session_id: currentSessionId, sender: 'user', content: userText, clinical_id: clinicalId });
-      await supabase.from('chat_sessions').update({ user_message_count: newCount, last_active_at: new Date().toISOString() }).eq('id', currentSessionId);
+      await supabase.from('chat_messages').insert({ 
+        session_id: currentSessionId, 
+        sender: 'user', 
+        content: userText 
+      });
+      await supabase.from('chat_sessions').update({ 
+        user_message_count: newCount, 
+        last_active_at: new Date().toISOString() 
+      }).eq('id', currentSessionId);
     }
 
     setTimeout(() => { scrollViewRef.current?.scrollToEnd({ animated: true }); }, 100);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
       const response = await fetch(process.env.EXPO_PUBLIC_N8N_WEBHOOK_URL!, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: userText, sessionId: sessionIdRef.current, userId: user?.id || null, clinicalId: clinicalId }),
+        body: JSON.stringify({ 
+          message: !contextInjectedRef.current ? `${historicalContext}\n\n[MENSAGEM DO USUÁRIO]:\n${userText}` : userText, 
+          sessionId: sessionIdRef.current, 
+          userId: userId 
+        }),
       });
+      contextInjectedRef.current = true;
       const data = await response.json();
       const rawReply = data.output || data.text || data.response || "Compreendo. Me conte um pouco mais.";
       
-      // Parsear tags de desbloqueio e limpar o texto
       const { cleanText, categoryIds } = parseUnlockTag(rawReply);
-      
       const lunaMessage: Message = { id: Date.now() + 1, sender: "luna", text: cleanText, timestamp: new Date() };
       
       if (currentSessionId) {
-        await supabase.from('chat_messages').insert({ session_id: currentSessionId, sender: 'luna', content: cleanText, clinical_id: clinicalId });
+        await supabase.from('chat_messages').insert({ 
+          session_id: currentSessionId, 
+          sender: 'luna', 
+          content: cleanText 
+        });
       }
 
       setMessages((prev) => [...prev, lunaMessage]);
-      
-      // Processar desbloqueio de categorias via Luna
       await processUnlockCategories(categoryIds);
     } catch (error) {
-      console.error("Error communicating with n8n Luna agent:", error);
       const errorMessage: Message = {
         id: Date.now() + 1, sender: "luna",
         text: "Me desculpe, estou com instabilidade de conexão no momento. Tente novamente em instantes. 🥺",
@@ -377,7 +437,6 @@ export default function ChatScreen() {
     }
   };
 
-  // === TELA: Luna bloqueada para riskLevel "none" ===
   if (riskLevel === 'none') {
     return (
       <View className="flex-1 bg-background">
@@ -417,7 +476,6 @@ export default function ChatScreen() {
     );
   }
 
-  // === TELA: Loading ===
   if (isLoadingSession) {
     return (
       <View className="flex-1 bg-background items-center justify-center">
@@ -428,7 +486,6 @@ export default function ChatScreen() {
     );
   }
 
-  // === TELA: Cooldown 48h ===
   if (cooldownStartAt) {
     return (
       <View className="flex-1 bg-background">
@@ -465,14 +522,12 @@ export default function ChatScreen() {
     );
   }
 
-  // === TELA: Chat Ativo ===
   return (
     <KeyboardAvoidingView 
       className="flex-1 bg-[#FAFAFA]"
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
     >
-      {/* Header */}
       <LinearGradient 
         colors={['rgba(169, 201, 255, 0.2)', 'transparent']}
         style={{ paddingTop: insets.top + 16, paddingBottom: 16, paddingHorizontal: 24 }}
@@ -503,7 +558,6 @@ export default function ChatScreen() {
         </Pressable>
       </LinearGradient>
 
-      {/* Crisis Alert - para modo crise */}
       <AnimatePresence>
         {showCrisisAlert && (
           <MotiView
@@ -528,14 +582,13 @@ export default function ChatScreen() {
         )}
       </AnimatePresence>
 
-      {/* Messages */}
       <ScrollView 
         ref={scrollViewRef}
         className="flex-1 px-5"
         contentContainerStyle={{ paddingBottom: 24, paddingTop: 10, gap: 16 }}
         showsVerticalScrollIndicator={false}
       >
-        {messages.map((message, index) => {
+        {messages.map((message) => {
           const isUser = message.sender === "user";
           return (
             <MotiView
@@ -573,7 +626,6 @@ export default function ChatScreen() {
         )}
       </ScrollView>
 
-      {/* Input Area or End Session Button */}
       <View 
         className="px-6 py-4 bg-white border-t border-gray-100"
         style={{ paddingBottom: insets.bottom > 0 ? insets.bottom + 8 : 16 }}
@@ -611,7 +663,6 @@ export default function ChatScreen() {
         )}
       </View>
 
-      {/* Modal de Desbloqueio de Categorias via Luna */}
       <Modal
         visible={showUnlockModal}
         transparent

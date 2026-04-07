@@ -69,6 +69,8 @@ const UnlockContext = createContext<UnlockContextType>({
 
 export const useUnlock = () => useContext(UnlockContext);
 
+import { supabase } from './supabase';
+
 export function calculateRiskLevel(score: number, isQ17Positive: boolean): RiskLevel {
   if (isQ17Positive || score >= 11) return 'critical';
   if (score >= 8) return 'high';
@@ -95,6 +97,29 @@ export function UnlockProvider({ children }: { children: React.ReactNode }) {
   const [lunaUnlocked, setLunaUnlocked] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // HELPER: Sincroniza com Supabase se houver sessão
+  const syncToSupabase = useCallback(async (risk: RiskLevel, unlocked: number[], luna: number[]) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const allUnlocked = [...new Set([...unlocked, ...luna])];
+      
+      const { error } = await supabase
+        .from('profiles')
+        .upsert({
+          id: user.id,
+          risk_level: risk,
+          unlocked_categories: allUnlocked,
+          updated_at: new Date().toISOString()
+        });
+
+      if (error) console.error('[UnlockContext] Erro ao sincronizar perfil:', error.message);
+    } catch (err) {
+      console.error('[UnlockContext] Erro inesperado na sincronia:', err);
+    }
+  }, []);
+
   // Carrega estado salvo do AsyncStorage
   useEffect(() => {
     const loadState = async () => {
@@ -105,9 +130,16 @@ export function UnlockProvider({ children }: { children: React.ReactNode }) {
           AsyncStorage.getItem(STORAGE_KEYS.LUNA_UNLOCKED),
         ]);
         
-        if (risk) setRiskLevel(risk as RiskLevel);
-        if (unlocked) setUnlockedCategories(JSON.parse(unlocked));
-        if (lunaUnl) setLunaUnlocked(JSON.parse(lunaUnl));
+        const currentRisk = (risk as RiskLevel) || 'none';
+        const currentUnlocked = unlocked ? JSON.parse(unlocked) : [];
+        const currentLunaUnl = lunaUnl ? JSON.parse(lunaUnl) : [];
+
+        setRiskLevel(currentRisk);
+        setUnlockedCategories(currentUnlocked);
+        setLunaUnlocked(currentLunaUnl);
+
+        // Tenta sincronizar com a nuvem após carregar local
+        syncToSupabase(currentRisk, currentUnlocked, currentLunaUnl);
       } catch (error) {
         console.error('[UnlockContext] Erro ao carregar estado:', error);
       } finally {
@@ -115,7 +147,7 @@ export function UnlockProvider({ children }: { children: React.ReactNode }) {
       }
     };
     loadState();
-  }, []);
+  }, [syncToSupabase]);
 
   const isLocked = useCallback((categoryId: number): boolean => {
     if (riskLevel === 'none') return true;
@@ -140,7 +172,10 @@ export function UnlockProvider({ children }: { children: React.ReactNode }) {
       AsyncStorage.setItem(STORAGE_KEYS.UNLOCKED_CATEGORIES, JSON.stringify(categories)),
       AsyncStorage.setItem(STORAGE_KEYS.LUNA_UNLOCKED, JSON.stringify([])),
     ]);
-  }, []);
+
+    // Sincroniza com Supabase
+    syncToSupabase(risk, categories, []);
+  }, [syncToSupabase]);
 
   const unlockCategory = useCallback(async (categoryIds: number[]) => {
     const allUnlocked = [...new Set([...unlockedCategories, ...lunaUnlocked])];
@@ -151,7 +186,10 @@ export function UnlockProvider({ children }: { children: React.ReactNode }) {
     const updated = [...new Set([...lunaUnlocked, ...newOnes])];
     setLunaUnlocked(updated);
     await AsyncStorage.setItem(STORAGE_KEYS.LUNA_UNLOCKED, JSON.stringify(updated));
-  }, [unlockedCategories, lunaUnlocked]);
+
+    // Sincroniza com Supabase
+    syncToSupabase(riskLevel, unlockedCategories, updated);
+  }, [unlockedCategories, lunaUnlocked, riskLevel, syncToSupabase]);
 
   return (
     <UnlockContext.Provider value={{

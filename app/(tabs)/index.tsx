@@ -25,13 +25,38 @@ const moods = [
   { emoji: "😊", label: "Ótimo", value: 5 },
 ];
 
+import { supabase } from "../../lib/supabase";
+
 export default function Home() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [selectedMood, setSelectedMood] = useState<number | null>(null);
   const { riskLevel, unlockedCategories, lunaUnlocked } = useUnlock();
-  
+
+  const handleMoodSelect = async (moodValue: number, emoji: string) => {
+    setSelectedMood(moodValue);
+    
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { error } = await supabase
+        .from('mood_entries')
+        .insert({
+          user_id: user.id,
+          mood_value: moodValue,
+          emoji: emoji,
+          created_at: new Date().toISOString()
+        });
+
+      if (error) console.error('[Home] Erro ao salvar humor:', error.message);
+    } catch (err) {
+      console.error('[Home] Erro inesperado ao salvar humor:', err);
+    }
+  };
+
   const userName = "Ana";
+
   const currentHour = new Date().getHours();
   const greeting = currentHour < 12 ? "Bom dia" : currentHour < 18 ? "Boa tarde" : "Boa noite";
   const dailyQuote = useMemo(() => dailyQuotes[new Date().getDate() % dailyQuotes.length], []);
@@ -61,20 +86,32 @@ export default function Home() {
               <Text className="text-xl text-foreground font-semibold">{userName}!</Text>
             </View>
           </View>
-          <View className="flex-row gap-2">
+          <View className="flex-row gap-3">
             <Pressable
-              onPress={() => router.push("/")}
-              className="w-10 h-10 rounded-full bg-white items-center justify-center shadow-sm"
-              style={{ elevation: 2 }}
+              onPress={() => router.push("/notifications")}
+              className="w-10 h-10 rounded-full bg-white items-center justify-center shadow-sm active:opacity-70 active:scale-95 transition-all"
+              style={{ 
+                elevation: 3,
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.05,
+                shadowRadius: 4,
+              }}
             >
-              <Bell size={20} color="#0b1b3d" />
+              <Bell size={20} color="#71717A" />
             </Pressable>
             <Pressable
-              onPress={() => router.push("/")}
-              className="w-10 h-10 rounded-full bg-white items-center justify-center shadow-sm"
-              style={{ elevation: 2 }}
+              onPress={() => router.push("/settings")}
+              className="w-10 h-10 rounded-full bg-white items-center justify-center shadow-sm active:opacity-70 active:scale-95 transition-all"
+              style={{ 
+                elevation: 3,
+                shadowColor: "#000",
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.05,
+                shadowRadius: 4,
+              }}
             >
-              <Settings size={20} color="#0b1b3d" />
+              <Settings size={20} color="#71717A" />
             </Pressable>
           </View>
         </View>
@@ -89,7 +126,7 @@ export default function Home() {
               {moods.map((mood) => (
                 <Pressable
                   key={mood.value}
-                  onPress={() => setSelectedMood(mood.value)}
+                  onPress={() => handleMoodSelect(mood.value, mood.emoji)}
                   className={`items-center gap-2 p-2 rounded-2xl ${
                     selectedMood === mood.value ? "bg-[#A9C9FF]/30" : "active:bg-[#F0F0F0]"
                   }`}
