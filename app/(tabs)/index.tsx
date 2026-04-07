@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { View, Text, Pressable, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
 import { Card } from "../../components/Card";
@@ -34,7 +34,7 @@ export default function Home() {
   const userName = "Ana";
   const currentHour = new Date().getHours();
   const greeting = currentHour < 12 ? "Bom dia" : currentHour < 18 ? "Boa tarde" : "Boa noite";
-  const dailyQuote = dailyQuotes[Math.floor(Math.random() * dailyQuotes.length)];
+  const dailyQuote = useMemo(() => dailyQuotes[new Date().getDate() % dailyQuotes.length], []);
 
   const isNone = riskLevel === 'none';
   const totalUnlocked = [...new Set([...unlockedCategories, ...lunaUnlocked])].length;
@@ -63,14 +63,14 @@ export default function Home() {
           </View>
           <View className="flex-row gap-2">
             <Pressable
-              onPress={() => router.push("/(tabs)/")}
+              onPress={() => router.push("/")}
               className="w-10 h-10 rounded-full bg-white items-center justify-center shadow-sm"
               style={{ elevation: 2 }}
             >
               <Bell size={20} color="#0b1b3d" />
             </Pressable>
             <Pressable
-              onPress={() => router.push("/(tabs)/")}
+              onPress={() => router.push("/")}
               className="w-10 h-10 rounded-full bg-white items-center justify-center shadow-sm"
               style={{ elevation: 2 }}
             >
@@ -166,7 +166,7 @@ export default function Home() {
                 <Button
                   variant="primary"
                   size="sm"
-                  onPress={() => router.push("/(tabs)/plan")}
+                  onPress={() => router.push("/plan")}
                   className="w-full"
                 >
                   Começar agora
@@ -178,7 +178,7 @@ export default function Home() {
             <MotiView from={{ opacity: 0, translateY: 20 }} animate={{ opacity: 1, translateY: 0 }} transition={{ type: "timing", duration: 400, delay: 400 }}>
               <View className="flex-row items-center justify-between mb-4 mt-2">
                 <Text className="text-lg font-semibold text-foreground">Suas Atividades</Text>
-                <Pressable onPress={() => router.push("/(tabs)/plan")}>
+                <Pressable onPress={() => router.push("/plan")}>
                   <Text className="text-sm font-semibold text-[#A9C9FF]">Ver todos</Text>
                 </Pressable>
               </View>
@@ -228,7 +228,7 @@ export default function Home() {
                 <Button
                   variant="emergency"
                   size="sm"
-                  onPress={() => router.push("/(tabs)/")}
+                  onPress={() => router.push("/")}
                 >
                   Falar com profissional
                 </Button>
