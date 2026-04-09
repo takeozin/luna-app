@@ -96,6 +96,111 @@ export const CBT_EXPERT_DATA: Record<string, any> = {
     ],
     conclusion: "Ao desafiar seus pensamentos como um advogado num tribunal, a ansiedade perde todo o combustível. Você percebe que o lobo em sua mente é apenas uma sombra projetada."
   },
+  "104": {
+    title: "Gráfico de Pizza das Responsabilidades",
+    objective: "TCC: Reduzir a personalização excessiva e a culpa por eventos fora do controle do usuário.",
+    steps: [
+      { 
+        text: "Muitas vezes, quando algo dá errado, nossa mente ansiosa assume 100% da culpa. Vamos analisar um evento estressante recente. Quanto da culpa você sente que é sua?", 
+        options: [
+          { text: "Sinto que foi tudo minha culpa.", feedback: "Isso se chama 'Personalização'. Vamos quebrar essa pizza em fatias reais. Quem mais estava envolvido? O azar? O cansaço? A falta de informação?" },
+          { text: "Sinto que eu poderia ter evitado.", feedback: "A ilusão de controle é um grande motor de ansiedade. Vamos ver quais fatores externos (clima, outras pessoas, sistema) também tiveram uma fatia nessa situação." }
+        ]
+      },
+      { 
+        text: "Imagine um gráfico de pizza. Se você dar 30% para a sua falha, quem fica com o resto? Talvez 20% para a falta de tempo, 20% para a falha de comunicação de terceiros e 30% para o acaso. Como o gráfico ficaria agora?", 
+        options: [
+          { text: "Minha parte fica bem menor assim.", feedback: "Exatamente! Ver os fatos como eles são, e não como a sua culpa os pinta, alivia o peso nos seus ombros imediatamente." },
+          { text: "Ainda me sinto mal pelo que fiz.", feedback: "Assumir sua responsabilidade é bom para crescer, mas carregar a fatia dos outros só te impede de caminhar. Devolva aos outros o que pertence a eles." }
+        ]
+      }
+    ],
+    conclusion: "Você não é o centro gravitacional de todos os problemas do mundo. Aprender a dividir a responsabilidade é aprender a ter compaixão por si mesmo."
+  },
+  "105": {
+    title: "A Escada do Enfrentamento",
+    objective: "Exposição Gradual: Criar uma hierarquia de medos para dessensibilização sistemática.",
+    steps: [
+      { 
+        text: "Evitar o que nos dá medo faz a ansiedade diminuir na hora, mas crescer amanhã. O segredo é enfrentar, mas de degrau em degrau. Qual seria o seu maior medo hoje?", 
+        options: [
+          { text: "Um medo social (falar com estranhos, ser julgado).", feedback: "Vamos construir a sua escada. O primeiro degrau não é dar uma palestra, mas talvez apenas dar 'bom dia' para o porteiro ou caixa." },
+          { text: "Um medo de fracasso ou de situações novas.", feedback: "Vamos começar com algo pequeno que você possa controlar. O que seria um teste 'seguro' para você hoje?" }
+        ]
+      },
+      { 
+        text: "Para cada degrau que você sobe, sua mente aprende: 'Eu sobrevivi e não foi tão ruim assim'. Qual o primeiro degrau que você se compromete a subir esta semana?", 
+        options: [
+          { text: "Vou fazer algo pequeno que estava adiando.", feedback: "Ótimo! Sinta o frio na barriga, mas não pare. Esse frio é apenas a sua coragem se aquecendo." },
+          { text: "Ainda estou com muito medo de começar.", feedback: "Tudo bem. Então o seu primeiro degrau é apenas mentalizar você fazendo a tarefa com sucesso. Isso já conta como treino!" }
+        ]
+      }
+    ],
+    conclusion: "A coragem não é a ausência de medo, é o julgamento de que algo é mais importante que o medo. Um degrau por vez, você conquista o topo."
+  },
+  "106": {
+    title: "A Técnica 5-4-3-2-1",
+    objective: "Mindfulness/Ancoragem: Trazer a atenção do futuro (ansiedade) para o presente (sentidos).",
+    steps: [
+      { 
+        text: "A ansiedade vive no futuro, no 'e se...'. O Mindfulness nos traz de volta para o 'aqui e agora'. Vamos usar seus 5 sentidos para te ancorar?", 
+        options: [
+          { text: "Sim, estou pronto.", feedback: "Primeiro, olhe ao redor. Identifique 5 coisas que você pode VER agora. Diga os nomes delas mentalmente." },
+          { text: "Minha mente está muito agitada para isso.", feedback: "É exatamente por isso que vamos focar nos olhos e não nos pensamentos. Tente achar apenas 1 objeto azul agora." }
+        ]
+      },
+      { 
+        text: "Agora, note 4 coisas que você pode TOCAR (a textura da roupa, a cadeira), 3 sons que pode OUVIR, 2 cheiros e 1 sabor (ou apenas note sua respiração). Como se sente?", 
+        options: [
+          { text: "Me sinto mais presente e calmo.", feedback: "Perfeito. Você acabou de forçar seu cérebro a sair do 'modo sobrevivência' para o 'modo observação'. O mundo real é muito mais seguro que o mundo mental ansioso." },
+          { text: "Ainda sinto um pouco de tensão.", feedback: "Normal. Repita o processo focando apenas nas texturas que você toca. O contato físico com a realidade é o melhor remédio para a vertigem mental." }
+        ]
+      }
+    ],
+    conclusion: "O presente é o único lugar onde você tem poder real. Sempre que a mente fugir para o futuro sombrio, use o 5-4-3-2-1 para puxá-la de volta."
+  },
+  "107": {
+    title: "SOS: O Protocolo TIPP",
+    objective: "DBT Crisis Survival: Mudança drástica na química corporal para interromper o pânico.",
+    steps: [
+      { 
+        text: "Se você estiver em um pico de pânico total, o raciocínio não funciona. Precisamos de um choque no sistema. O 'T' do TIPP é de Temperatura. Você tem acesso a água gelada agora?", 
+        options: [
+          { text: "Sim, posso pegar.", feedback: "Lave o rosto com água gelada ou segure um cubo de gelo nas mãos. Isso ativa o 'Reflexo de Mergulho', que bruscamente desacelera o ritmo cardíaco." },
+          { text: "Não posso agora.", feedback: "Então vamos para o 'P': Pressão Muscular. Aperte todos os músculos do corpo com força por 5 segundos e solte tudo de uma vez. Repita 3 vezes." }
+        ]
+      },
+      { 
+        text: "O objetivo é dizer ao seu sistema biológico: 'Houve uma mudança de ambiente, saia do modo pânico'. Já sentiu uma leve alteração no foco?", 
+        options: [
+          { text: "Sim, o gelo/pressão me despertou.", feedback: "Excelente. Você saiu do loop mental. Agora, respire lentamente, soltando o ar pelo dobro do tempo que puxar." },
+          { text: "Ainda sinto o coração acelerado.", feedback: "Continue a pressão muscular: contraia e solte. O seu corpo não consegue manter o pico de adrenalina se você forçar o relaxamento muscular repetidamente." }
+        ]
+      }
+    ],
+    conclusion: "Em crises extremas, use o corpo para comandar a mente. O protocolo TIPP é o seu botão de 'reset' de emergência."
+  },
+  "108": {
+    title: "Cartão de Enfrentamento",
+    objective: "Prevenção de Recaídas: Criar um plano de ação para momentos de vulnerabilidade futura.",
+    steps: [
+      { 
+        text: "Dias ruins vão acontecer, e está tudo bem. Ter um 'Plano de Crise' escrito evita que você se sinta perdido quando a névoa voltar. O que mais te ajudou nestas sessões?", 
+        options: [
+          { text: "As técnicas de respiração e ancoragem.", feedback: "Anote no seu 'Cartão Mental': 1. Respirar (Expirar longo). 2. Ver 5 objetos. 3. Lembrar que é apenas adrenalina." },
+          { text: "Desafiar os pensamentos catastróficos.", feedback: "Anote no seu 'Cartão Mental': 1. Qual a prova disso? 2. Eu já superei isso antes. 3. O que eu diria a um amigo?" }
+        ]
+      },
+      { 
+        text: "Uma recaída não é o fim do caminho, é apenas um desvio. Você aprendeu as ferramentas; elas não sumiram. Você confia que pode usá-las novamente?", 
+        options: [
+          { text: "Sim, sinto que tenho um kit de ferramentas agora.", feedback: "Essa é a base da resiliência. Você não é mais a pessoa sem recursos que começou esta trilha. Você é um mestre da sua própria regulação." },
+          { text: "Tenho medo de esquecer tudo na hora H.", feedback: "Por isso o Cartão de Enfrentamento é físico ou digital. Deixe-o fácil no celular. No pânico, a gente não pensa, a gente lê e executa." }
+        ]
+      }
+    ],
+    conclusion: "Você completou a jornada da ansiedade! Agora, você não apenas entende o seu monstro, você sabe como domá-lo. O caminho para o autoconhecimento continua em você."
+  },
 
   // --------- 2. AUTOCONFIANÇA ---------
   "201": {
@@ -127,6 +232,27 @@ export const CBT_EXPERT_DATA: Record<string, any> = {
     ],
     conclusion: "Lembre-se da lei de ouro: Seu valor humano intrínseco jamais pode sofrer inflação ou deflação atrelado à opinião externa. É uma base rochosa inabalável."
   },
+  "202": {
+    title: "O Advogado do Diabo vs Crítico",
+    objective: "TCC: Identificar a 'voz' da autocrítica e criar um Contra-Argumento Compasivo.",
+    steps: [
+      { 
+        text: "Todos temos uma voz interna que julga cada passo. Qual o insulto favorito do seu Crítico Interno?", 
+        options: [
+          { text: "'Você não é bom o suficiente / Nunca vai conseguir.'", feedback: "Essa voz não é a sua 'consciência', é apenas um padrão de pensamento aprendido. Vamos dar um nome a ela? Que tal 'O Sabotador'?" },
+          { text: "'As pessoas estão fingindo que gostam de você.'", feedback: "Isso é Leitura Mental negativa. O seu crítico está tentando te proteger da rejeição, mas de um jeito muito cruel. Vamos desafiá-lo." }
+        ]
+      },
+      { 
+        text: "A técnica é: quando o Crítico falar, você responde como um Advogado de Defesa. 'Sim, eu errei essa parte, mas eu também acertei X e Y'. O que você pode dizer em sua defesa agora?", 
+        options: [
+          { text: "Eu fiz o melhor que pude com o que eu sabia.", feedback: "Essa é uma verdade clínica potente. Ninguém acorda querendo falhar. Você agiu com os recursos que tinha no momento. Perdoe-se." },
+          { text: "Meu erro não apaga minhas qualidades.", feedback: "Exato! Um borrão em um quadro não destrói a obra inteira. O seu crítico foca no borrão, o advogado foca na tela completa." }
+        ]
+      }
+    ],
+    conclusion: "Diminuir o volume do Crítico Interno exige prática. Quanto mais você defende a si mesmo, mais fraca a voz do julgamento se torna."
+  },
   "203": {
     title: "Lidando com Julgamentos Alheios",
     objective: "TCC: Viés Egotista e Efeito Holofote (Spotlight Effect).",
@@ -155,6 +281,158 @@ export const CBT_EXPERT_DATA: Record<string, any> = {
     ],
     conclusion: "Liberte-se imediatamente do cárcere imenso mental das aprovações totais públicas. Ser amável é fundamental, mas desagradar algumas expectativas fantasmas na sua trilha ao progresso é uma honra necessária."
   },
+  "204": {
+    title: "Vencendo o Impostor",
+    objective: "TCC: Coleta de Dados Factuais contra o sentimento de fraude.",
+    steps: [
+      { 
+        text: "A Síndrome do Impostor é o medo constante de ser 'descoberto' como uma fraude. Você sente que suas conquistas foram apenas sorte?", 
+        options: [
+          { text: "Sim, parece que eu dei sorte e logo vão perceber.", feedback: "A sorte pode ter aberto uma porta, mas FOI VOCÊ quem passou por ela e se manteve lá. Vamos listar 3 coisas que só você fez para chegar onde está." },
+          { text: "Sinto que não sou tão bom quanto pensam.", feedback: "Isso é uma distorção de comparação. Você conhece seus bastidores, mas só vê o palco dos outros. Todos se sentem impostores às vezes, até os gênios." }
+        ]
+      },
+      { 
+        text: "O antídoto é o 'Arquivo de Provas'. Se fôssemos a um tribunal hoje, quais fatos (diplomas, elogios, projetos entregues) provam que você é competente?", 
+        options: [
+          { text: "Tenho resultados reais que entreguei.", feedback: "Resgate esses resultados sempre que a dúvida vier. O sentimento é mentiroso, os dados são verdadeiros. Você não é uma fraude, você é um trabalhador em evolução." },
+          { text: "Ainda acho que qualquer um faria o mesmo.", feedback: "Pode ser, mas foi VOCÊ quem fez. E você fez do seu jeito único. Reconhecer seu esforço é o primeiro passo para a autoconfiança." }
+        ]
+      }
+    ],
+    conclusion: "Você não precisa ser perfeito para ser legítimo. Ocupe o seu lugar com orgulho: você trabalhou duro para estar nele."
+  },
+  "205": {
+    title: "O Poder do 'Não'",
+    objective: "Treino de Assertividade: Estabelecer limites saudáveis sem culpa excessiva.",
+    steps: [
+      { 
+        text: "Dizer 'sim' para tudo é, na verdade, dizer 'não' para você mesmo. O que te impede de impor limites às pessoas?", 
+        options: [
+          { text: "Medo de magoar os outros ou ser egoísta.", feedback: "Limites não são muros para separar, são pontes para proteger a sua energia. Pessoas que te amam vão respeitar o seu 'não'. Quem não respeita, é quem mais precisava ouvir." },
+          { text: "Medo de parecer grosseiro ou entrar em conflito.", feedback: "Existe uma diferença entre ser agressivo e ser assertivo. Você pode dizer não com gentileza e firmeza ao mesmo tempo. Vamos treinar?" }
+        ]
+      },
+      { 
+        text: "Tente esta frase: 'Agradeço o convite/pedido, mas no momento não consigo assumir mais este compromisso'. Como soa para você?", 
+        options: [
+          { text: "Soa educado e libertador.", feedback: "Perfeito! Você não deu uma desculpa, deu um fato. Você é o gestor do seu tempo e da sua saúde mental." },
+          { text: "Sinto que ainda precisaria dar uma explicação longa.", feedback: "Explicações longas parecem pedidos de desculpas por ter um limite. 'Não' é uma frase completa. Tente manter Curto, Claro e Gentil." }
+        ]
+      }
+    ],
+    conclusion: "Sua paz vale mais do que a aprovação de quem ultrapassa os seus limites. Pratique o 'não' como um ato de amor próprio."
+  },
+  "206": {
+    title: "O Diário de Vitórias",
+    objective: "Foco Positivo: Reabilitar o cérebro a notar progressos, por menores que sejam.",
+    steps: [
+      { 
+        text: "Nossa mente é programada para focar no que falta. Vamos treinar o olhar para o que JÁ EXISTE. Qual foi a sua pequena vitória de hoje?", 
+        options: [
+          { text: "Fiz uma tarefa que estava adiando.", feedback: "Isso é excelente! Comemore o esforço, não apenas o resultado final. O sucesso é a soma dessas pequenas vitórias diárias." },
+          { text: "Consegui lidar com uma emoção difícil.", feedback: "Essa é a maior vitória de todas! Regular-se emocionalmente é uma habilidade de elite. Você está se tornando um especialista em si mesmo." }
+        ]
+      },
+      { 
+        text: "À noite, antes de dormir, tente listar 3 coisas que deram certo. Não precisam ser grandes coisas. Pode ser um café gostoso ou uma conversa boa. Topa o desafio?", 
+        options: [
+          { text: "Vou tentar fazer isso hoje.", feedback: "Com o tempo, seu cérebro vai começar a 'procurar' essas vitórias durante o dia para ter o que anotar. Isso muda a química da sua felicidade." },
+          { text: "Minha vida está muito difícil para ver vitórias.", feedback: "Entendo. Nesses dias, a sua vitória é 'Eu sobrevivi a um dia difícil'. Isso por si só já demonstra uma força imensa." }
+        ]
+      }
+    ],
+    conclusion: "Você concluiu o módulo de Autoconfiança! Você agora tem a base para se aceitar, se defender e se valorizar. Você é a sua melhor aliança."
+  },
+
+    conclusion: "Você concluiu o módulo de Autoconfiança! Você agora tem a base para se aceitar, se defender e se valorizar. Você é a sua melhor aliança."
+  },
+
+  // --------- 3. FOCO E CONCENTRAÇÃO ---------
+  "301": {
+    title: "A Economia da Atenção",
+    objective: "Psicoeducação: Entender a atenção como um recurso finito e aprender a gerenciá-la.",
+    steps: [
+      { 
+        text: "Sua atenção é o seu bem mais precioso, mas vivemos em um mundo feito para roubá-la. Onde você sente que mais 'perde' o seu foco?", 
+        options: [
+          { text: "Notificações de celular e redes sociais.", feedback: "As notificações geram pequenos picos de dopamina que viciam o cérebro em interrupções. Vamos aprender a 'limpar' esse ruído." },
+          { text: "Interrupções de outras pessoas ou ambiente barulhento.", feedback: "O ambiente molda o comportamento. Se o ambiente é caótico, a mente reflete isso. Precisamos criar 'Santuários de Foco'." }
+        ]
+      },
+      { 
+        text: "Mudar de tarefa (multitasking) custa caro para o cérebro. Levamos até 20 minutos para voltar ao foco profundo após uma interrupção. Sabia disso?", 
+        options: [
+          { text: "Não fazia ideia que demorava tanto.", feedback: "Pois é! Se você olha o WhatsApp a cada 10 minutos, você nunca entra em estado de Flow. O segredo é o 'Bloco Único' de tarefa." },
+          { text: "Eu sinto que sou produtivo fazendo várias coisas.", feedback: "Na verdade, você está apenas alternando rápido, o que gera cansaço mental dobrado. Vamos testar o poder de fazer UMA coisa por vez." }
+        ]
+      }
+    ],
+    conclusion: "Proteger sua atenção é um ato de respeito pelo seu tempo e sua inteligência. Escolha onde colocar sua luz hoje."
+  },
+  "302": {
+    title: "Pomodoro Clínico",
+    objective: "Técnica de Gestão de Tempo: Alternar foco intenso com descanso real para evitar fadiga.",
+    steps: [
+      { 
+        text: "O cérebro é como um músculo: ele cansa após 25-50 minutos de esforço intenso. O Pomodoro sugere 25 min de foco e 5 min de pausa. Como você costuma fazer suas pausas?", 
+        options: [
+          { text: "Eu não faço pausas, sigo até exaurir.", feedback: "Isso gera o 'Burnout de Curto Prazo'. A sua qualidade cai drasticamente após a primeira hora sem descanso. Pausar é investir na próxima hora." },
+          { text: "Eu descanso olhando o celular/notícias.", feedback: "Isso não é descanso, é 'consumo'. O cérebro continua processando informação. Pausa real é olhar para longe, levantar ou beber água." }
+        ]
+      },
+      { 
+        text: "Vamos testar o 'Sprint de Foco'? Defina uma tarefa pequena, coloque o cronômetro para 25 minutos e ignore o resto do mundo. Topa?", 
+        options: [
+          { text: "Vou testar agora mesmo.", feedback: "Ótimo. Quando o alarme tocar, levante-se. Não olhe para telas. Sinta o seu cérebro 'esfriar' antes da próxima rodada." },
+          { text: "Acho que 25 minutos é pouco tempo.", feedback: "Se você estiver bem, pode fazer 50 minutos com 10 de pausa. O importante é o Ritmo: Tensão e Relaxamento." }
+        ]
+      }
+    ],
+    conclusion: "Produtividade não é sobre quanto você faz, mas sobre a qualidade da sua presença no que está fazendo."
+  },
+  "303": {
+    title: "O Ritual do Ambiente",
+    objective: "Controle de Estímulos: Configurar o ambiente físico para reduzir a carga cognitiva.",
+    steps: [
+      { 
+        text: "Sua força de vontade é limitada. Se o celular está na mesa, você gasta energia NÃO olhando para ele. Onde está o seu celular agora?", 
+        options: [
+          { text: "Está aqui do meu lado, na mesa.", feedback: "Dica de ouro: Coloque-o em outro cômodo ou dentro de uma gaveta. Fora da visão, fora da mente. Economize sua vontade para o trabalho." },
+          { text: "Está longe, em modo silencioso.", feedback: "Excelente! Você já configurou o 'Sucesso de Foco'. Note como a ansiedade de olhar para ele diminui quando ele não é visível." }
+        ]
+      }
+    ],
+    conclusion: "Não confie na sua disciplina, confie no seu design. Desenhe um ambiente onde o foco seja o caminho de menor resistência."
+  },
+  "304": {
+    title: "Micro-Meditação de Ancoragem",
+    objective: "Mindfulness: Exercício de 1 minuto para resetar a mente dispersa.",
+    steps: [
+      { 
+        text: "Sua mente vai fugir, e está tudo bem. Meditar não é 'limpar a mente', é notar que ela fugiu e trazê-la de volta. Vamos tentar por 10 respirações?", 
+        options: [
+          { text: "Sim, vamos fechar os olhos.", feedback: "Apenas conte: 1 (puxa), 1 (solta)... até 10. Se perder a conta, comece de novo sem se julgar." },
+          { text: "Sinto que não consigo ficar parado.", feedback: "Então foque apenas na sola dos seus pés tocando o chão. Sinta o peso do seu corpo. Isso é meditação de ancoragem." }
+        ]
+      }
+    ],
+    conclusion: "Atenção plena é um músculo. Cada vez que você volta para o agora, você fica mais forte."
+  },
+  "305": {
+    title: "Entrando no Flow",
+    objective: "Estado de Fluxo: Encontrar o equilíbrio entre desafio e habilidade.",
+    steps: [
+      { 
+        text: "O 'Flow' acontece quando a tarefa é difícil o suficiente para engajar, mas não tão difícil que te desespere. O que você vai fazer agora está em qual nível?", 
+        options: [
+          { text: "Está muito fácil, estou entediado.", feedback: "Dica: Aumente o desafio! Tente fazer mais rápido ou com mais qualidade técnica. Transforme em um jogo." },
+          { text: "Está muito difícil, estou ansioso.", feedback: "Dica: Quebre em pedaços menores. Peça ajuda ou estude a base primeiro. Reduza a pressão." }
+        ]
+      }
+    ],
+    conclusion: "O Flow é onde o tempo desaparece e a excelência acontece. Encontre o seu equilíbrio."
+  },
 
   // --------- 4. FALAR EM PÚBLICO ---------
   "401": {
@@ -178,38 +456,333 @@ export const CBT_EXPERT_DATA: Record<string, any> = {
     ],
     conclusion: "O segredo de encantar pessoas num tablado de palco da sala universitária ou em conferências é soltar a carga de julgamentos de divindade de aprovações e abraçar as missões concretas cruas."
   },
+  "402": {
+    title: "A Técnica da Âncora Social",
+    objective: "Regulação Emocional: Usar o contato visual seletivo para reduzir a ansiedade social.",
+    steps: [
+      { 
+        text: "Olhar para uma multidão de rostos pode ser opressor. O segredo é achar 'âncoras' amigáveis. Quem você procura na plateia?", 
+        options: [
+          { text: "Procuro alguém que esteja sorrindo ou balançando a cabeça.", feedback: "Excelente! Foque nessas 2 ou 3 pessoas. Fale 'para elas'. O seu cérebro vai entender que você está em uma conversa amigável, não em um julgamento." },
+          { text: "Tento não olhar para ninguém, olho para o fundo.", feedback: "Olhar para o fundo pode te desconectar e fazer você parecer robótico. Tente olhar para a 'testa' das pessoas se o olho for demais. Eles acharão que você está olhando nos olhos!" }
+        ]
+      }
+    ],
+    conclusion: "O público não é um monstro de mil cabeças, é apenas um grupo de indivíduos que quer que você vá bem (para eles não ficarem entediados!)."
+  },
+  "403": {
+    title: "Linguagem Corporal de Poder",
+    objective: "Feedback Bio-comportamental: Usar a postura para alterar a química interna (cortisol vs testosterona).",
+    steps: [
+      { 
+        text: "Seu corpo fala com a plateia, mas também fala com o seu próprio cérebro. Posturas encolhidas aumentam o cortisol (estresse). Vamos testar a 'Posição de Poder'?", 
+        options: [
+          { text: "Como eu faço essa posição?", feedback: "Fique em pé, mãos nos quadris, ombros para trás e queixo levemente erguido. Segure por 2 minutos. Isso engana o cérebro a se sentir mais confiante." },
+          { text: "Sinto-me bobo fazendo isso.", feedback: "Pode parecer bobo, mas os hormônios não mentem. Faça isso no banheiro antes de entrar. Saia de lá sentindo-se um gigante." }
+        ]
+      }
+    ],
+    conclusion: "Não espere se sentir confiante para agir com confiança. Aja com confiança e o sentimento virá atrás."
+  },
+    conclusion: "O silêncio é onde a sua mensagem cria raízes na mente dos outros. Não tenha medo dele: domine-o."
+  },
 
-  // --------- TEMPLATE DINÂMICO PARA TODOS OS OUTROS RESTANTES (501 a 804) COM OPÇÕES ---------
-  ...Array.from({ length: 45 }).reduce((acc: any, _, index) => {
-    let idStr = "";
-    if (index < 5) idStr = `30${index + 1}`; // Foco e Concentração (301-305)
-    else if (index < 9) idStr = `40${index - 4}`; // Falar em Público (401-404)
-    else if (index < 16) idStr = `50${index - 8}`; // Burnout (501-507)
-    else if (index < 22) idStr = `60${index - 15}`; // Sono (601-606)
-    else if (index < 27) idStr = `70${index - 21}`; // Relacionamentos (701-705)
-    else if (index < 31) idStr = `80${index - 26}`; // Comportamentos (801-804)
-    else return acc;
+  // --------- 5. BURNOUT E ESTRESSE ---------
+  "501": {
+    title: "Sinais de Alerta",
+    objective: "Psicoeducação: Identificar os estágios do esgotamento antes do colapso total.",
+    steps: [
+      { 
+        text: "O Burnout não acontece da noite para o dia. É uma erosão lenta. Você sente que está 'correndo no vazio' ultimamente?", 
+        options: [
+          { text: "Sim, me sinto exausto mesmo após dormir.", feedback: "Isso é 'Exaustão Emocional'. Quando o sono não restaura, o problema não é físico, é a carga mental que não desliga. Precisamos de 'Pausas Cognitivas'." },
+          { text: "Sinto que nada do que eu faço importa mais.", feedback: "Isso é 'Despersonalização' ou cinismo. É uma defesa do cérebro para parar de sofrer com a pressão. Vamos resgatar o seu propósito aos poucos." }
+        ]
+      }
+    ],
+    conclusion: "Reconhecer que você chegou ao limite não é fraqueza, é inteligência estratégica. O primeiro passo da cura é a pausa."
+  },
+  "502": {
+    title: "O Ciclo do Estresse",
+    objective: "Biologia do Estresse: Completar o ciclo fisiológico para sinalizar segurança ao corpo.",
+    steps: [
+      { 
+        text: "Lidar com o estressor (o problema) é diferente de lidar com o estresse (a química no corpo). O seu corpo ainda está em modo 'Luta ou Fuga'?", 
+        options: [
+          { text: "Sim, sinto o corpo tenso e alerta.", feedback: "Para fechar o ciclo, o corpo precisa de movimento. 10 agachamentos, um abraço longo ou uma corrida curta dizem ao cérebro: 'Saímos do perigo'." },
+          { text: "Não, me sinto apenas 'desconectado'.", feedback: "Isso pode ser o estado de 'Congelamento'. Tente respirações profundas e lentas para reativar o sistema parassimpático com gentileza." }
+        ]
+      }
+    ],
+    conclusion: "Não leve o estresse do trabalho para o travesseiro. Feche o ciclo físico antes de tentar descansar a mente."
+  },
+  "503": {
+    title: "Autocompaixão no Trabalho",
+    objective: "TCC: Substituir a auto-exigência crítica por um diálogo interno funcional.",
+    steps: [
+      { 
+        text: "Você se sente culpado quando não está sendo produtivo?", 
+        options: [
+          { text: "Sim, sinto que estou ficando para trás.", feedback: "Essa culpa é o combustível do Burnout. Lembre-se: Descanso é parte do trabalho. Sem recarga, não há entrega." },
+          { text: "Tento não sentir, mas a pressão é grande.", feedback: "A pressão externa é real, mas a interna é opcional. Tente ser o seu 'chefe compassivo' por um dia. O que ele diria?" }
+        ]
+      }
+    ],
+    conclusion: "Você é um ser humano, não um recurso humano. Trate-se com a dignidade que você merece."
+  },
+  "504": {
+    title: "Desconexão Digital",
+    objective: "Saneamento Mental: Criar limites claros entre vida online e offline.",
+    steps: [
+      { 
+        text: "As notificações de trabalho após o horário impedem o cérebro de entrar em 'Modo Recuperação'. Você checa e-mails à noite?", 
+        options: [
+          { text: "Sim, sempre 'só uma olhadinha'.", feedback: "Essa olhadinha ativa o córtex pré-frontal e bloqueia a melatonina. Defina um horário de 'Morte Digital' às 20h ou 21h." },
+          { text: "Não, eu desligo tudo.", feedback: "Excelente! Você está protegendo a sua sanidade. O mundo não vai acabar se você responder apenas amanhã de manhã." }
+        ]
+      }
+    ],
+    conclusion: "O direito de estar offline é o luxo mais necessário da era moderna. Recupere o seu tempo."
+  },
+  "505": {
+    title: "Reavaliando Valores",
+    objective: "ACT (Terapia de Aceitação e Compromisso): Alinhar ações diárias com o que realmente importa.",
+    steps: [
+      { 
+        text: "Muitas vezes o Burnout vem de trabalhar muito em algo que não acreditamos. Se o dinheiro não fosse o foco, o que te daria satisfação hoje?", 
+        options: [
+          { text: "Ajudar pessoas ou criar algo novo.", feedback: "Isso mostra um valor de 'Contribuição'. Tente injetar 10% disso no seu trabalho atual ou hobby. Isso protege contra o vazio." },
+          { text: "Ter mais tempo para minha família/hobbies.", feedback: "Seu valor é 'Conexão'. O trabalho é o meio, não o fim. Não sacrifique o destino (família) pela jornada (carreira)." }
+        ]
+      }
+    ],
+    conclusion: "Trabalhar com sentido é o melhor antídoto para o cansaço da alma."
+  },
+  "506": {
+    title: "Recuperação Ativa",
+    objective: "Fisiologia da Recuperação: Entender que lazer não é 'não fazer nada'.",
+    steps: [
+      { 
+        text: "Existem 7 tipos de descanso. Qual você mais precisa hoje: Físico, Mental, Social, Criativo, Emocional, Espiritual ou Sensorial?", 
+        options: [
+          { text: "Mental e Sensorial (silêncio e sem telas).", feedback: "Vá para um lugar sem luz artificial e sem barulho. Deixe o cérebro 'desfragmentar' os dados do dia." },
+          { text: "Criativo (ver algo belo, sem pressão).", feedback: "Leia um livro, ouça música ou observe a natureza. Alimente a alma sem esperar nenhum resultado produtivo." }
+        ]
+      }
+    ],
+    conclusion: "Descanse antes de estar exausto. A prevenção é muito mais curta que a cura."
+  },
+  "507": {
+    title: "Plano de Sustentabilidade",
+    objective: "Prevenção: Criar um 'Contrato de Bem-Estar' consigo mesmo.",
+    steps: [
+      { 
+        text: "Para não voltar ao ciclo do esgotamento, precisamos de 'Não-Negociáveis'. Qual será o seu?", 
+        options: [
+          { text: "Não trabalhar nos finais de semana.", feedback: "Ótimo! Bloqueie isso na agenda. É o seu tempo sagrado de reconstrução celular e mental." },
+          { text: "Fazer uma atividade física 3x por semana.", feedback: "O exercício limpa o cortisol e aumenta a resiliência nervosa. É o seu seguro de vida contra o estresse." }
+        ]
+      }
+    ],
+    conclusion: "Você concluiu o módulo de Burnout! Você agora tem as ferramentas para apagar o incêndio e reconstruir sua casa com materiais mais resistentes."
+  },
 
-    // Apenas preenche se já não estiver declarado (pra não sobrescrever os de cima)
-    if (!acc[idStr]) {
-      acc[idStr] = {
-        title: "Aprofundamento Clínico TCC/DBT",
-        objective: "Avaliação Sistêmica de Crenças Nucleares e Validação Profunda.",
-        steps: [
-          { 
-            text: "Em diversos momentos os nossos fardos se tornam muito maiores apenas porque nós engolimos e invalidamos nossas dores. Como você vem internalizando seus incômodos recentes sobre este exato tema?", 
-            options: [
-              { text: "Sinto que não deveria estar sofrendo tanto por isso.", feedback: "Típica resposta ligada à Validação de Terceiros e auto invalidação severa emocional íntima! Toda dor percebida e sofrida na sua carne pela percepção da alma interior sua deve ser tratada como 100% válida real. Não a diminua sem avaliar." },
-              { text: "Acabo desabando porque cheguei ao limite forte.", feedback: "Bem-vindo à fase do Esgotamento das Resistências e Resiliências que se acumularam nos poros como ferrugens profundas. Se permitir sentir por um tempo no refúgio blindado interno é o passo de Aceitação primária das TCC." }
-            ]
-          },
-          { 
-            text: "Um grande divisor de águas e salvador profundo em sua recuperação terapêutica consiste em parar drasticamente violenta de resistir ao rio invisível incontrolável dos sentimentos obscuros presentes hoje.", 
-            options: [
-              { text: "Parece contraintuitivo, mas entendo.", feedback: "A dialética da DBT (Dialectical Behavior Therapy): A mudança real só ocorre a partir do momento genuíno realístico imediato de Aceitações Extremas das dores inalteráveis e realidades doloridas passadas pesadas nos limites da zona cega." },
-              { text: "Eu tenho muito medo que a dor nunca vá embora.", feedback: "Pensamento Socrático rápido: Já estivemos em fundo de poços na cronologia das trajetórias e nós sobrevivemos. A natureza de qualquer onda, inclusive a onda letal melancólica e frustrante estressante, consiste obrigatoriamente de um prazo válido com a química em constante dissolução total final natural fisiológica!" }
-            ]
-          },
+  // --------- 6. SONO E DESCANSO ---------
+  "601": {
+    title: "Higiene do Sono 101",
+    objective: "Regulação Circadiana: Ajustar os gatilhos biológicos para a indução natural do sono.",
+    steps: [
+      { 
+        text: "O seu quarto é um santuário ou um escritório? Existem telas ou luzes acesas nele?", 
+        options: [
+          { text: "Uso o celular na cama até pegar no sono.", feedback: "A luz azul engana o cérebro fazendo-o pensar que é dia. Tente ler um livro físico ou ouvir um podcast calmo em luz baixa." },
+          { text: "Meu quarto é escuro e fresco.", feedback: "Perfeito! O corpo precisa de uma queda de temperatura e escuridão total para liberar melatonina de qualidade." }
+        ]
+      }
+    ],
+    conclusion: "O sono começa 2 horas antes de você fechar os olhos. Prepare o caminho."
+  },
+  "602": {
+    title: "A Técnica do 'Brain Dump'",
+    objective: "TCC: Descarregar preocupações no papel para evitar a insônia ansiosa.",
+    steps: [
+      { 
+        text: "Você deita e a sua mente começa a fazer a lista de tarefas de amanhã?", 
+        options: [
+          { text: "Sim, perco o sono planejando tudo.", feedback: "Técnica: Escreva tudo em um papel 'fora' do quarto. Diga ao cérebro: 'Está anotado, não precisamos mais lembrar disso agora'." },
+          { text: "Fico remoendo coisas que aconteceram hoje.", feedback: "Use o diário de gratidão ou vitórias (que vimos antes). Substitua o 'E se...' por 'O que foi bom'." }
+        ]
+      }
+    ],
+    conclusion: "Seu cérebro é uma máquina de processamento, não de armazenamento. Esvazie o cache antes de desligar."
+  },
+  "603": {
+    title: "Relaxamento Progressivo",
+    objective: "Técnica de Jacobson: Reduzir a tensão muscular para sinalizar relaxamento ao SNC.",
+    steps: [
+      { 
+        text: "Muitas vezes não percebemos o quanto o corpo está tenso. Vamos tentar? Contraia os dedos dos pés com força por 5 segundos e solte.", 
+        options: [
+          { text: "Senti um alívio imediato ao soltar.", feedback: "Agora faça o mesmo com as panturrilhas, coxas, abdômen e ombros. Suba até o rosto. O relaxamento físico força o mental." },
+          { text: "Acho que já estou relaxado.", feedback: "Tente focar na sua mandíbula. Ela está travada? Solte-a. Frequentemente guardamos tensão nos dentes sem notar." }
+        ]
+      }
+    ],
+    conclusion: "Um corpo relaxado é o convite mais irresistível para um sono profundo."
+  },
+  "604": {
+    title: "A Regra dos 20 Minutos",
+    objective: "Controle de Estímulo: Quebrar a associação negativa entre cama e insônia.",
+    steps: [
+      { 
+        text: "Se você estiver na cama há mais de 20 minutos sem sono, o que você faz?", 
+        options: [
+          { text: "Fico rolando de um lado para o outro.", feedback: "Erro comum! Isso treina o cérebro a associar a cama com frustração. Levante-se, vá para outro lugar no escuro, e só volte quando o sono vier." },
+          { text: "Levanto e vou fazer algo calmo.", feedback: "Exato! Leia algo chato ou ouça música suave. Deixe o 'impulso de sono' carregar novamente fora da cama." }
+        ]
+      }
+    ],
+    conclusion: "A cama deve ser um lugar de apenas duas coisas: sono e intimidade. Proteja essa associação."
+  },
+  "605": {
+    title: "Meditação das Nuvens",
+    objective: "Desfusão Cognitiva: Observar pensamentos sem se engajar neles à noite.",
+    steps: [
+      { 
+        text: " Imagine que seus pensamentos são nuvens passando no céu. Você não precisa subir em nenhuma delas.     conclusion: "Você concluiu o módulo de Sono! Que suas noites sejam portos seguros e seus dias repletos de vitalidade renovada."
+  },
+
+  // --------- 7. RELACIONAMENTOS (CNV) ---------
+  "701": {
+    title: "Observação vs Julgamento",
+    objective: "CNV (Comunicação Não-Violenta): Aprender a descrever fatos sem adicionar rótulos ou críticas.",
+    steps: [
+      { 
+        text: "Muitas brigas começam porque julgamos em vez de observar. Qual frase soa menos agressiva para você?", 
+        options: [
+          { text: "'Você é uma pessoa desatenta e nunca me ouve'.", feedback: "Isso é um Julgamento Moralizador. Ele faz o outro se defender e atacar de volta. A comunicação trava aqui." },
+          { text: "'Notei que você olhou o celular enquanto eu falava'.", feedback: "Isso é uma Observação Pura. É um fato irrefutável. É muito mais difícil brigar com um fato do que com um insulto." }
+        ]
+      }
+    ],
+    conclusion: "A observação é o terreno neutro onde a comunicação pode florescer. Comece pelo que aconteceu, não pelo que você achou."
+  },
+  "702": {
+    title: "Expressando Sentimentos",
+    objective: "CNV: Conectar-se com a vulnerabilidade para facilitar a empatia.",
+    steps: [
+      { 
+        text: "Dizer 'Eu me sinto ignorado' parece um sentimento, mas na verdade é um julgamento sobre o outro. Sente a diferença para 'Eu me sinto triste'?", 
+        options: [
+          { text: "Parece mais difícil dizer 'estou triste'.", feedback: "Sim, porque nos deixa vulneráveis. Mas a vulnerabilidade é o que gera conexão real. Tente nomear a emoção básica." },
+          { text: "Entendi, vou focar no que EU sinto por dentro.", feedback: "Perfeito! Quando você fala da sua dor, ninguém pode dizer que você está 'errado'. O seu sentimento é legítimo." }
+        ]
+      }
+    ],
+    conclusion: "Sentimentos são bússolas. Quando você os compartilha com clareza, você convida o outro a entrar no seu mundo."
+  },
+  "703": {
+    title: "Pedidos Assertivos",
+    objective: "CNV: Transformar reclamações em solicitações claras e realizáveis.",
+    steps: [
+      { 
+        text: "Em vez de dizer 'Quero que você me respeite', o que seria um pedido concreto e positivo?", 
+        options: [
+          { text: "'Gostaria que você me deixasse terminar de falar sem me interromper'.", feedback: "Exato! Isso é realizável e específico. O outro agora sabe exatamente o que fazer para te agradar." },
+          { text: "'Quero que você seja mais carinhoso'.", feedback: "Isso ainda é vago. O que é 'ser carinhoso' para você? Pode ser um abraço ao chegar ou uma mensagem de bom dia. Seja específico!" }
+        ]
+      }
+    ],
+    conclusion: "Quem não pede com clareza, recebe qualquer coisa. Dê ao outro o mapa para chegar ao seu coração."
+  },
+  "704": {
+    title: "A Escuta Atenta",
+    objective: "Empatia: Ouvir para entender, não para responder.",
+    steps: [
+      { 
+        text: "Quando alguém te conta um problema, qual o seu primeiro impulso?", 
+        options: [
+          { text: "Dar um conselho ou solução logo de cara.", feedback: "Apesar da boa intenção, isso pode invalidar o sentimento. Muitas vezes a pessoa só quer ser ouvida. Tente dizer: 'Parece que isso foi difícil para você'." },
+          { text: "Contar uma história parecida que aconteceu comigo.", feedback: "Cuidado com a 'competição de dor'. Traga o foco de volta para o outro. Deixe-o terminar de esvaziar o peito antes de falar de você." }
+        ]
+      }
+    ],
+    conclusion: "Ouvir é um presente. Às vezes, o seu silêncio empático é a cura que o outro precisava."
+  },
+  "705": {
+    title: "Limites em Relações",
+    objective: "DBT: Efetividade Interpessoal (DEAR MAN).",
+    steps: [
+      { 
+        text: "Colocar um limite pode dar medo de perder a pessoa. Mas qual o custo de NÃO colocar o limite?", 
+        options: [
+          { text: "O custo é eu me sentir ressentido e infeliz.", feedback: "E o ressentimento destrói a relação de dentro para fora. Um limite claro hoje salva a relação amanhã. Seja firme no pedido e gentil na forma." },
+          { text: "Tenho medo de brigar e a pessoa ir embora.", feedback: "Pessoas que vão embora porque você tem limites não eram seguras para você. Quem te valoriza, respeita as suas bordas." }
+        ]
+      }
+    ],
+    conclusion: "Relacionamentos saudáveis são construídos com 'sins' sinceros e 'nãos' respeitados. Você completou o módulo de Relações!"
+  },
+
+  // --------- 8. COMPORTAMENTOS ---------
+  "801": {
+    title: "O Medo da Procrastinação",
+    objective: "TCC: Entender que procrastinar é sobre regulação emocional, não sobre preguiça.",
+    steps: [
+      { 
+        text: "Por que você acha que adia aquela tarefa difícil?", 
+        options: [
+          { text: "Porque sou preguiçoso ou desorganizado.", feedback: "Mito! Procrastinamos o que nos dá medo, tédio ou insegurança. É uma fuga emocional da tarefa, não falta de vontade." },
+          { text: "Tenho medo de não fazer bem feito (perfeccionismo).", feedback: "Bingo! O perfeccionismo é o pai da procrastinação. Se não posso ser perfeito, prefiro nem começar. Vamos quebrar esse ciclo." }
+        ]
+      }
+    ],
+    conclusion: "A tarefa não é o problema, é a sua relação emocional com ela. Vamos torná-la menos assustadora."
+  },
+  "802": {
+    title: "A Regra dos 2 Minutos",
+    objective: "Mudança de Hábito: Vencer a inércia com metas ridiculamente fáceis.",
+    steps: [
+      { 
+        text: "O cérebro odeia mudanças grandes. Se você quiser meditar 20 minutos, comece prometendo 2 minutos. Topa?", 
+        options: [
+          { text: "Sim, 2 minutos parece fácil demais.", feedback: "Essa é a ideia! Quando é 'fácil demais', a resistência some. Uma vez que você começou, é muito mais provável que continue." },
+          { text: "Acho que 2 minutos não faz diferença.", feedback: "No resultado imediato não, mas no HÁBITO faz toda a diferença. Treine o seu cérebro a APENAS COMEÇAR." }
+        ]
+      }
+    ],
+    conclusion: "Feito é melhor que perfeito. E começado é melhor que planejado."
+  },
+  "803": {
+    title: "Perfeccionismo vs Excelência",
+    objective: "TCC: Diferenciar o padrão saudável da auto-punição excessiva.",
+    steps: [
+      { 
+        text: "O Perfeccionista foca no que falta. O Excelente foca no que pode ser melhorado. Onde você está?", 
+        options: [
+          { text: "Estou sempre focado no erro, nunca estou satisfeito.", feedback: "Isso é Perfeccionismo Mal-adaptativo. Ele te paralisa e retira o prazer da conquista. Tente a meta dos '80%': entregue o que é bom, não o impossível." },
+          { text: "Busco fazer o meu melhor, mas aceito falhas.", feedback: "Isso é Busca por Excelência. É um motor potente de crescimento sem o chicote da culpa. Continue assim!" }
+        ]
+      }
+    ],
+    conclusion: "A perfeição é uma miragem que te impede de caminhar. A excelência é o passo que você dá hoje."
+  },
+  "804": {
+    title: "O Poder do Reforço",
+    objective: "Behaviorismo: Recompensar pequenos passos para manter a motivação.",
+    steps: [
+      { 
+        text: "Você se parabeniza quando consegue fazer o que planejou?", 
+        options: [
+          { text: "Não, só sinto que fiz minha obrigação.", feedback: "Isso é um erro biológico! Sem recompensa (dopamina), o cérebro deixa de querer repetir o esforço. Diga a si mesmo: 'Bom trabalho' toda vez que terminar algo." },
+          { text: "Sim, tento me dar um pequeno prêmio.", feedback: "Excelente! Um café, 5 minutos de descanso ou apenas um 'check' na lista são reforços poderosos. Vicie o seu cérebro em progresso." }
+        ]
+      }
+    ],
+    conclusion: "Seja o seu maior incentivador. Você concluiu o módulo de Comportamentos e finalizou toda a Biblioteca Clínica Luna! O mundo é o seu laboratório agora."
+  }
+};
+      },
           { 
             text: "Você finalizará esta breve e objetiva reflexão da imersão mental com a percepção plena dos Distanciamentos Críticos Funcionais Práticos: Eu observo, noto, avalio... e escolho não mergulhar para dentro das histórias sem fundos destrutivos mentais das minhas narrativas cognitivas sombrias limitantes mentais.", 
             options: [
