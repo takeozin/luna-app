@@ -167,6 +167,19 @@ export default function ChatScreen() {
         .order('created_at', { ascending: false })
         .limit(3);
 
+      // 3. Pegar respostas das atividades clínicas
+      let activitiesStr = "";
+      try {
+        const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+        const localAnswersJson = await AsyncStorage.getItem('@activity_responses');
+        if (localAnswersJson) {
+          const localAnswers = JSON.parse(localAnswersJson);
+          if (localAnswers && localAnswers.length > 0) {
+            activitiesStr = localAnswers.slice(0, 2).map((a: any) => `- Em "${a.module_title}", o usuário relatou/escolheu: ${a.responses}`).join("\n");
+          }
+        }
+      } catch (e) {}
+
       let context = "[MEMÓRIA DE LONGO PRAZO]\n";
       
       if (moods && moods.length > 0) {
@@ -177,7 +190,13 @@ export default function ChatScreen() {
         context += "Últimas coisas que o usuário me contou: " + pastMsgs.map(m => m.content).join(" | ") + ".\n";
       }
 
-      context += "Se houver algo relevante (ex: ele estava triste ontem), mencione isso de forma direta e acolhedora no início, perguntando como as coisas evoluíram.";
+      if (activitiesStr) {
+        context += "\n[CONTEXTO CLÍNICO IMPORTANTE - ATIVIDADES RECENTES]\n";
+        context += activitiesStr + "\n";
+        context += "Use essas informações para puxar assunto, validar as escolhas do usuário na atividade e ajudar no acompanhamento terapêutico se for pertinente.\n\n";
+      } else {
+        context += "Se houver algo relevante (ex: ele estava triste ontem), mencione isso de forma direta e acolhedora no início, perguntando como as coisas evoluíram.";
+      }
       
       return context;
     } catch (err: any) {

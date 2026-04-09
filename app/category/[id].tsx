@@ -1,11 +1,15 @@
+import { useState, useCallback } from "react";
 import { View, Text, ScrollView, Pressable } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import { Card } from "../../components/Card";
 import { MotiView } from "moti";
-import { ArrowLeft, Brain, Heart, Users, Zap, Moon, Focus, Coffee, MessageSquare, PlayCircle } from "lucide-react-native";
+import { ArrowLeft, Brain, Heart, Users, Zap, Moon, Focus, Coffee, MessageSquare, PlayCircle, CheckCircle2 } from "lucide-react-native";
 import { categoryModules } from "../data/mockData";
+import { CBT_EXPERT_DATA } from "../data/activitiesData";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
+import { supabase } from "../../lib/supabase";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const getCategoryDetails = (numericId: number) => {
   switch (numericId) {
@@ -39,6 +43,50 @@ export default function CategoryScreen() {
   const numericId = Number(categoryId) || 1;
   const categoryDetails = getCategoryDetails(numericId);
   const modules = categoryModules[numericId] || [];
+
+  const [completedModules, setCompletedModules] = useState<string[]>([]);
+  const [isLoadingProgress, setIsLoadingProgress] = useState(true);
+
+  const fetchProgress = async () => {
+    try {
+      setIsLoadingProgress(true);
+      
+      // Local fallback first
+      const localProgressJson = await AsyncStorage.getItem('@completed_modules');
+      const localProgress: string[] = localProgressJson ? JSON.parse(localProgressJson) : [];
+
+      // Supabase fetch (if auth is available)
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      let supabaseProgress: string[] = [];
+      if (session?.user) {
+        const { data, error } = await supabase
+          .from('lesson_progress')
+          .select('module_id')
+          .eq('user_id', session.user.id)
+          .eq('status', 'completed');
+
+        if (!error && data) {
+          supabaseProgress = data.map(d => String(d.module_id));
+        }
+      }
+
+      // Merge results to support both authenticated and anonymous usage
+      const mergedProgress = Array.from(new Set([...localProgress, ...supabaseProgress]));
+      setCompletedModules(mergedProgress);
+
+    } catch (e) {
+      console.log('Erro ao buscar progresso:', e);
+    } finally {
+      setIsLoadingProgress(false);
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchProgress();
+    }, [categoryId])
+  );
 
   return (
     <View className="flex-1 bg-background">
@@ -83,39 +131,59 @@ export default function CategoryScreen() {
           </View>
         ) : (
           <View className="gap-4">
-            {modules.map((module, index) => (
-              <MotiView
-                key={module.id}
-                from={{ opacity: 0, translateX: -20 }}
-                animate={{ opacity: 1, translateX: 0 }}
-                transition={{ delay: 100 + index * 100, type: "spring", damping: 20 }}
-              >
-                <Pressable
-                  onPress={() => router.push(`/plan/${module.id}`)}
-                  className="active:opacity-80"
+            {modules.map((module, index) => {
+              const isCompleted = completedModules.includes(String(module.id));
+              const exactSteps = CBT_EXPERT_DATA[module.id]?.steps?.length || 3;
+              const estTime = exactSteps <= 3 ? "2 min" : "3 min";
+              
+              return (
+                <MotiView
+                  key={module.id}
+                  from={{ opacity: 0, translateX: -20 }}
+                  animate={{ opacity: 1, translateX: 0 }}
+                  transition={{ delay: 100 + index * 100, type: "spring", damping: 20 }}
                 >
-                  <Card className="border-0 shadow-sm p-5 bg-white rounded-3xl flex-row items-center gap-4">
-                    <View 
-                      className="w-14 h-14 rounded-full items-center justify-center flex-shrink-0 bg-gray-50 border border-gray-100"
-                    >
-                      <Text className="text-2xl">{module.emoji || "📚"}</Text>
-                    </View>
-                    
-                    <View className="flex-1">
-                      <Text className="font-bold text-[15px] text-foreground mb-1 leading-5">
-                        {module.title}
-                      </Text>
-                      <View className="flex-row items-center gap-2">
-                        <PlayCircle size={14} color="#a1a1aa" />
-                        <Text className="text-xs font-semibold text-muted-foreground">
-                          {module.lessons || 5} aulas • {module.duration || "aprox. 30 min"}
-                        </Text>
+                  <Pressable
+                    onPress={() => router.push(`/activities/${module.id}` as any)}
+                    className="active:opacity-80"
+                  >
+                    <Card className={`border-0 shadow-sm p-5 rounded-3xl flex-row items-center gap-4 ${isCompleted ? 'bg-green-50 border-2 border-green-500/20' : 'bg-white'}`}>
+                      <View 
+                        className={`w-14 h-14 rounded-full items-center justify-center flex-shrink-0 ${isCompleted ? 'bg-green-100' : 'bg-gray-50 border border-gray-100'}`}
+                      >
+                        {isCompleted ? (
+                          <CheckCircle2 size={24} color="#16a34a" />
+                        ) : (
+                          <Text className="text-2xl">{module.emoji || "📚"}</Text>
+                        )}
                       </View>
-                    </View>
-                  </Card>
-                </Pressable>
-              </MotiView>
-            ))}
+                      
+                      <View className="flex-1">
+                        <Text className={`font-bold text-[15px] mb-1 leading-5 ${isCompleted ? 'text-green-800' : 'text-foreground'}`}>
+                          {module.title}
+                        </Text>
+                        <View className="flex-row items-center gap-2">
+                          {isCompleted ? (
+                            <View className="flex-row items-center">
+                              <Text className="text-xs font-bold text-green-600 uppercase tracking-wider">
+                                Finalizado
+                              </Text>
+                            </View>
+                          ) : (
+                            <>
+                              <PlayCircle size={14} color="#a1a1aa" />
+                              <Text className="text-xs font-semibold text-muted-foreground">
+                                {exactSteps} {exactSteps === 1 ? 'etapa' : 'etapas'} • ~{estTime}
+                              </Text>
+                            </>
+                          )}
+                        </View>
+                      </View>
+                    </Card>
+                  </Pressable>
+                </MotiView>
+              );
+            })}
           </View>
         )}
       </ScrollView>
