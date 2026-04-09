@@ -1,0 +1,1 @@
+const fs = require('fs'); const content = fs.readFileSync('app/data/activitiesData.ts', 'utf8'); const regex = /"(\d{3})":\s*\{\s*title: "(.*?)"/g; let match; while ((match = regex.exec(content)) !== null) { console.log(match[1] + ' : ' + match[2]); }

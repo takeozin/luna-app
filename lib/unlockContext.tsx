@@ -45,15 +45,18 @@ const STORAGE_KEYS = {
   RISK_LEVEL: 'luna_risk_level',
   UNLOCKED_CATEGORIES: 'luna_unlocked_categories',
   LUNA_UNLOCKED: 'luna_luna_unlocked_categories',
+  USER_XP: 'luna_user_xp',
 };
 
 interface UnlockContextType {
   riskLevel: RiskLevel;
   unlockedCategories: number[];
   lunaUnlocked: number[];
+  currentXP: number;
   isLocked: (categoryId: number) => boolean;
   setRiskAndUnlock: (score: number, answers: Record<number, number>, isQ17: boolean) => Promise<void>;
   unlockCategory: (categoryIds: number[]) => Promise<void>;
+  addXP: (amount: number) => Promise<void>;
   isLoading: boolean;
 }
 
@@ -61,9 +64,11 @@ const UnlockContext = createContext<UnlockContextType>({
   riskLevel: 'none',
   unlockedCategories: [],
   lunaUnlocked: [],
+  currentXP: 0,
   isLocked: () => true,
   setRiskAndUnlock: async () => {},
   unlockCategory: async () => {},
+  addXP: async () => {},
   isLoading: true,
 });
 
@@ -95,6 +100,7 @@ export function UnlockProvider({ children }: { children: React.ReactNode }) {
   const [riskLevel, setRiskLevel] = useState<RiskLevel>('none');
   const [unlockedCategories, setUnlockedCategories] = useState<number[]>([]);
   const [lunaUnlocked, setLunaUnlocked] = useState<number[]>([]);
+  const [currentXP, setCurrentXP] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
 
   // HELPER: Sincroniza com Supabase se houver sessão
@@ -124,19 +130,22 @@ export function UnlockProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const loadState = async () => {
       try {
-        const [risk, unlocked, lunaUnl] = await Promise.all([
+        const [risk, unlocked, lunaUnl, xp] = await Promise.all([
           AsyncStorage.getItem(STORAGE_KEYS.RISK_LEVEL),
           AsyncStorage.getItem(STORAGE_KEYS.UNLOCKED_CATEGORIES),
           AsyncStorage.getItem(STORAGE_KEYS.LUNA_UNLOCKED),
+          AsyncStorage.getItem(STORAGE_KEYS.USER_XP),
         ]);
         
         const currentRisk = (risk as RiskLevel) || 'none';
         const currentUnlocked = unlocked ? JSON.parse(unlocked) : [];
         const currentLunaUnl = lunaUnl ? JSON.parse(lunaUnl) : [];
+        const loadedXP = xp ? parseInt(xp, 10) : 0;
 
         setRiskLevel(currentRisk);
         setUnlockedCategories(currentUnlocked);
         setLunaUnlocked(currentLunaUnl);
+        setCurrentXP(loadedXP);
 
         // Tenta sincronizar com a nuvem após carregar local
         syncToSupabase(currentRisk, currentUnlocked, currentLunaUnl);
@@ -191,14 +200,27 @@ export function UnlockProvider({ children }: { children: React.ReactNode }) {
     syncToSupabase(riskLevel, unlockedCategories, updated);
   }, [unlockedCategories, lunaUnlocked, riskLevel, syncToSupabase]);
 
+  const addXP = useCallback(async (amount: number) => {
+    setCurrentXP(prev => {
+      const newXP = prev + amount;
+      AsyncStorage.setItem(STORAGE_KEYS.USER_XP, newXP.toString()).catch(err => 
+        console.error('[UnlockContext] Erro ao salvar XP local:', err)
+      );
+      // Aqui podemos acionar o Supabase futuramente se houver uma coluna XP no perfil
+      return newXP;
+    });
+  }, []);
+
   return (
     <UnlockContext.Provider value={{
       riskLevel,
       unlockedCategories,
       lunaUnlocked,
+      currentXP,
       isLocked,
       setRiskAndUnlock,
       unlockCategory,
+      addXP,
       isLoading,
     }}>
       {children}

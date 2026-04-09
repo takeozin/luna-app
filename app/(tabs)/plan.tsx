@@ -21,7 +21,7 @@ export default function MyPlan() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [completedIds, setCompletedIds] = useState<string[]>([]);
-  const { isLocked, riskLevel, unlockedCategories, lunaUnlocked } = useUnlock();
+  const { isLocked, riskLevel, unlockedCategories, lunaUnlocked, currentXP } = useUnlock();
   
   // Combine all unlocked items
   const allUnlocked = [...new Set([...unlockedCategories, ...lunaUnlocked])];
@@ -75,7 +75,13 @@ export default function MyPlan() {
         colors={["rgba(169, 201, 255, 0.2)", "rgba(255, 255, 255, 0)"]}
         style={{ paddingTop: insets.top + 20, paddingBottom: 24, paddingHorizontal: 24 }}
       >
-        <Text className="text-3xl font-semibold text-foreground mb-2">A Jornada</Text>
+        <View className="flex-row justify-between items-center mb-2">
+          <Text className="text-3xl font-semibold text-foreground">A Jornada</Text>
+          <View className="bg-purple-100 px-3 py-1.5 rounded-full border border-purple-200 flex-row items-center gap-1 shadow-sm">
+            <Star size={14} color="#7E22CE" fill="#7E22CE" />
+            <Text className="text-sm font-bold text-purple-800">{currentXP} XP</Text>
+          </View>
+        </View>
         <Text className="text-muted-foreground text-sm">
           Seu caminho para o autoconhecimento
         </Text>

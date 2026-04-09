@@ -345,9 +345,6 @@ export const CBT_EXPERT_DATA: Record<string, any> = {
     conclusion: "Você concluiu o módulo de Autoconfiança! Você agora tem a base para se aceitar, se defender e se valorizar. Você é a sua melhor aliança."
   },
 
-    conclusion: "Você concluiu o módulo de Autoconfiança! Você agora tem a base para se aceitar, se defender e se valorizar. Você é a sua melhor aliança."
-  },
-
   // --------- 3. FOCO E CONCENTRAÇÃO ---------
   "301": {
     title: "A Economia da Atenção",
@@ -484,6 +481,18 @@ export const CBT_EXPERT_DATA: Record<string, any> = {
     ],
     conclusion: "Não espere se sentir confiante para agir com confiança. Aja com confiança e o sentimento virá atrás."
   },
+  "404": {
+    title: "A Arte da Pausa Dramática",
+    objective: "Controle de Ritmo: Usar o silêncio como ferramenta de autoridade e processamento mental.",
+    steps: [
+      { 
+        text: "Quando estamos nervosos, tendemos a falar muito rápido para 'acabar logo'. Isso passa insegurança. Qual o seu maior medo sobre o silêncio?", 
+        options: [
+          { text: "Que pensem que eu esqueci a fala.", feedback: "Um silêncio de 3 segundos parece uma eternidade para você, mas para a plateia parece 'reflexão e autoridade'. Use a pausa para respirar." },
+          { text: "Que eu perca o fio da meada.", feedback: "A pausa é justamente quando você recupera o fio. Se perder, respire, olhe para suas notas com calma. A plateia espera por você." }
+        ]
+      }
+    ],
     conclusion: "O silêncio é onde a sua mensagem cria raízes na mente dos outros. Não tenha medo dele: domine-o."
   },
 
@@ -649,9 +658,29 @@ export const CBT_EXPERT_DATA: Record<string, any> = {
     objective: "Desfusão Cognitiva: Observar pensamentos sem se engajar neles à noite.",
     steps: [
       { 
-        text: " Imagine que seus pensamentos são nuvens passando no céu. Você não precisa subir em nenhuma delas.     conclusion: "Você concluiu o módulo de Sono! Que suas noites sejam portos seguros e seus dias repletos de vitalidade renovada."
+        text: " Imagine que seus pensamentos são nuvens passando no céu. Você não precisa subir em nenhuma delas. Consegue apenas olhar?", 
+        options: [
+          { text: "Consigo por um tempo, mas logo me perco.", feedback: "É normal. Quando se perder, apenas note: 'Ah, estou pensando em trabalho de novo' e volte a olhar a nuvem. Não se julgue." },
+          { text: "Meus pensamentos são tempestades, não nuvens.", feedback: "Tudo bem. Observe a tempestade de longe, como se estivesse dentro de uma casa segura. O barulho lá fora não te atinge aqui dentro." }
+        ]
+      }
+    ],
+    conclusion: "Você não é seus pensamentos. Você é o céu que os observa passar."
   },
-
+  "606": {
+    title: "Ritmo Circadiano Estável",
+    objective: "Cronobiologia: Manter consistência para regular o relógio biológico.",
+    steps: [
+      { 
+        text: "Você costuma acordar em horários muito diferentes nos finais de semana?", 
+        options: [
+          { text: "Sim, durmo até muito tarde no domingo.", feedback: "Isso gera o 'Jetlag Social'. Tente variar no máximo 1 hora. A constância no despertar é o que regula o sono da noite seguinte." },
+          { text: "Tento manter o mesmo horário sempre.", feedback: "Excelente! Seu corpo já sabe quando começar a produzir energia de manhã e relaxamento à noite. Você é um mestre do ritmo." }
+        ]
+      }
+    ],
+    conclusion: "Você concluiu o módulo de Sono! Que suas noites sejam portos seguros e seus dias repletos de vitalidade renovada."
+  },
   // --------- 7. RELACIONAMENTOS (CNV) ---------
   "701": {
     title: "Observação vs Julgamento",
@@ -781,20 +810,4 @@ export const CBT_EXPERT_DATA: Record<string, any> = {
     ],
     conclusion: "Seja o seu maior incentivador. Você concluiu o módulo de Comportamentos e finalizou toda a Biblioteca Clínica Luna! O mundo é o seu laboratório agora."
   }
-};
-      },
-          { 
-            text: "Você finalizará esta breve e objetiva reflexão da imersão mental com a percepção plena dos Distanciamentos Críticos Funcionais Práticos: Eu observo, noto, avalio... e escolho não mergulhar para dentro das histórias sem fundos destrutivos mentais das minhas narrativas cognitivas sombrias limitantes mentais.", 
-            options: [
-              { text: "Eu noto que não sou o meu sofrimento temporal.", feedback: "A mais pura Desfusão Cognitiva com clareza da técnica ACT e TCC. Você está seguro no centro livre das observações dos piores furacões climáticos na ilha do ego mental interior protegido durabilidade total máxima!" },
-              { text: "Eu crio o ponto de luz focal para minha melhoria futura.", feedback: "A Regulação Imersiva do Humor através dos Comportamentos Valorizados que nós definimos das metas purificadas essenciais sem correntes de escravidão nas visões limitadas. Vá em paz gigante livremente hoje!" }
-            ]
-          }
-        ],
-        conclusion: "Esta exploração intensa gerou blocos enormes valiosos neurais flexivos saudáveis consistentes da plasticidade mental na sua rota direta de curas profundas essenciais das dores complexas escondidas diárias! Estamos trilhando o progresso vivo robusto!"
-      };
-    }
-    return acc;
-  }, {} as Record<string, any>)
-
 };

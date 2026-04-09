@@ -5,12 +5,16 @@ import { MotiView, AnimatePresence } from "moti";
 import { X, CheckCircle2, ChevronRight } from "lucide-react-native";
 import { supabase } from "../../lib/supabase";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Haptics from 'expo-haptics';
+import ConfettiCannon from 'react-native-confetti-cannon';
 
 import { CBT_EXPERT_DATA } from '../data/activitiesData';
+import { useUnlock } from "../../lib/unlockContext";
 
 export default function InteractiveActivity() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
+  const { addXP } = useUnlock();
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -39,6 +43,8 @@ export default function InteractiveActivity() {
   const handleNext = () => {
     if (selectedOptionIndex === null) return; // Força selecionar opção antes de continuar
     
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
     const selectedText = steps[currentStepIndex].options[selectedOptionIndex].text;
     setUserAnswers(prev => [...prev, selectedText]);
     
@@ -63,6 +69,8 @@ export default function InteractiveActivity() {
         if (!localProgress.includes(id as string)) {
           localProgress.push(id as string);
           await AsyncStorage.setItem('@completed_modules', JSON.stringify(localProgress));
+          
+          await addXP(100);
         }
 
         // Salva as respostas no local storage para a Luna ler depois
@@ -164,7 +172,10 @@ export default function InteractiveActivity() {
                   return (
                     <View key={index}>
                       <Pressable
-                        onPress={() => setSelectedOptionIndex(index)}
+                        onPress={() => {
+                          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                          setSelectedOptionIndex(index);
+                        }}
                         className={`p-4 rounded-xl border-2 flex-row items-center justify-between transition-colors
                           ${isSelected 
                             ? 'bg-purple-50 border-[#8B5CF6]' 
@@ -212,9 +223,26 @@ export default function InteractiveActivity() {
                 <CheckCircle2 size={48} color="#16a34a" />
               </View>
               <Text className="text-3xl font-bold text-slate-800 text-center mb-4">Sessão Concluída</Text>
-              <Text className="text-lg text-slate-600 text-center leading-7 px-4">
+              <Text className="text-lg text-slate-600 text-center leading-7 px-4 mb-4">
                 {conclusion}
               </Text>
+
+              <MotiView 
+                from={{ opacity: 0, translateY: 10, scale: 0.9 }}
+                animate={{ opacity: 1, translateY: 0, scale: 1 }}
+                transition={{ delay: 500, type: "spring" }}
+                className="bg-purple-100 px-4 py-2 rounded-full border border-purple-200 mt-2"
+              >
+                <Text className="text-sm font-bold text-purple-700">+100 XP Adquiridos!</Text>
+              </MotiView>
+
+              <ConfettiCannon 
+                count={150} 
+                origin={{x: -10, y: 0}} 
+                fallSpeed={2500} 
+                fadeOut={true} 
+                autoStart={true} 
+              />
             </MotiView>
           )}
         </AnimatePresence>
