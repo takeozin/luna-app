@@ -1,15 +1,84 @@
-import { useState, useEffect } from "react";
-import { View, Text, Pressable, ScrollView, SafeAreaView, Dimensions } from "react-native";
+import React, { useState, useEffect, useRef } from "react";
+import { View, Text, Pressable, ScrollView, SafeAreaView, Dimensions, Animated, Easing, StyleSheet } from "react-native";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 import { MotiView, AnimatePresence } from "moti";
 import { X, CheckCircle2, ChevronRight } from "lucide-react-native";
 import { supabase } from "../../lib/supabase";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Haptics from 'expo-haptics';
-import ConfettiCannon from 'react-native-confetti-cannon';
 
 import { CBT_EXPERT_DATA } from '../data/activitiesData';
 import { useUnlock } from "../../lib/unlockContext";
+
+// Custom Confetti Particle
+const ConfettiParticle = ({ delay, color, initialX }: { delay: number, color: string, initialX: number }) => {
+  const fall = useRef(new Animated.Value(-100)).current;
+  const swing = useRef(new Animated.Value(0)).current;
+  const rotate = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.timing(fall, {
+        toValue: Dimensions.get('window').height + 100,
+        duration: Math.random() * 2000 + 3000,
+        delay: delay,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    ).start();
+
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(swing, {
+          toValue: Math.random() * 30 + 15,
+          duration: Math.random() * 800 + 800,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(swing, {
+          toValue: -(Math.random() * 30 + 15),
+          duration: Math.random() * 800 + 800,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        })
+      ])
+    ).start();
+
+    Animated.loop(
+      Animated.timing(rotate, {
+        toValue: 1,
+        duration: Math.random() * 200 + 300,
+        easing: Easing.linear,
+        useNativeDriver: true,
+      })
+    ).start();
+  }, []);
+
+  const spin = rotate.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg']
+  });
+
+  return (
+    <Animated.View
+      style={{
+        position: 'absolute',
+        top: 0,
+        left: initialX,
+        width: Math.random() < 0.5 ? 8 : 12,
+        height: Math.random() < 0.5 ? 12 : 8,
+        backgroundColor: color,
+        borderRadius: Math.random() < 0.5 ? 20 : 0,
+        transform: [
+          { translateY: fall },
+          { translateX: swing },
+          { rotateX: spin },
+          { rotateY: spin }
+        ],
+      }}
+    />
+  );
+};
 
 export default function InteractiveActivity() {
   const { id } = useLocalSearchParams();
@@ -19,7 +88,21 @@ export default function InteractiveActivity() {
   const [isFinished, setIsFinished] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Fallback caso não encontre
+  const [particles] = useState(() => {
+    const colors = ['#8B5CF6', '#10B981', '#F59E0B', '#3B82F6', '#EF4444', '#EC4899', '#14B8A6'];
+    const p = [];
+    const screenWidth = Dimensions.get('window').width;
+    for (let i = 0; i < 150; i++) {
+      p.push({
+        id: i,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        delay: Math.random() * 2500,
+        initialX: Math.random() * screenWidth
+      });
+    }
+    return p;
+  });
+
   const activity = CBT_EXPERT_DATA[id as string];
 
   if (!activity) {
@@ -41,7 +124,7 @@ export default function InteractiveActivity() {
   const [userAnswers, setUserAnswers] = useState<string[]>([]);
 
   const handleNext = () => {
-    if (selectedOptionIndex === null) return; // Força selecionar opção antes de continuar
+    if (selectedOptionIndex === null) return;
     
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
@@ -50,7 +133,7 @@ export default function InteractiveActivity() {
     
     if (currentStepIndex < totalSteps - 1) {
       setCurrentStepIndex(prev => prev + 1);
-      setSelectedOptionIndex(null); // Reseta a seleção para o próximo passo
+      setSelectedOptionIndex(null);
     } else {
       setIsFinished(true);
     }
@@ -59,35 +142,27 @@ export default function InteractiveActivity() {
   const handleFinish = async () => {
     try {
       setIsSaving(true);
-      
       const clinicalNotes = userAnswers.join(' | ');
 
-      // Salva localmente via AsyncStorage (Fallback / Offline)
       try {
         const localProgressJson = await AsyncStorage.getItem('@completed_modules');
         const localProgress: string[] = localProgressJson ? JSON.parse(localProgressJson) : [];
         if (!localProgress.includes(id as string)) {
           localProgress.push(id as string);
           await AsyncStorage.setItem('@completed_modules', JSON.stringify(localProgress));
-          
           await addXP(100);
         }
 
-        // Salva as respostas no local storage para a Luna ler depois
         const localAnswersJson = await AsyncStorage.getItem('@activity_responses');
         const localAnswers = localAnswersJson ? JSON.parse(localAnswersJson) : [];
         localAnswers.unshift({ module_title: title, responses: clinicalNotes, date: new Date().toISOString() });
-        // Mantem apenas as ultimas 10
         await AsyncStorage.setItem('@activity_responses', JSON.stringify(localAnswers.slice(0, 10)));
-
       } catch (localErr) {
         console.log('Erro ao salvar no AsyncStorage:', localErr);
       }
 
-      // Salva na nuvem via Supabase (se autenticado e online)
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
-        // Salva que completou
         await supabase.from('lesson_progress').upsert({
           user_id: session.user.id,
           category: 'ansiedade',
@@ -97,7 +172,6 @@ export default function InteractiveActivity() {
           updated_at: new Date().toISOString(),
         }, { onConflict: 'user_id, category, module_id' });
 
-        // Salva as respostas exatas para a Luna ter contexto
         if (clinicalNotes.length > 0) {
           await supabase.from('activity_responses').insert({
             user_id: session.user.id,
@@ -118,7 +192,15 @@ export default function InteractiveActivity() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#FAFAFA' }}>
       <Stack.Screen options={{ headerShown: false }} />
-      {/* Header */}
+      
+      {isFinished && (
+        <View pointerEvents="none" style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 999 }}>
+          {particles.map(p => (
+            <ConfettiParticle key={p.id} delay={p.delay} color={p.color} initialX={p.initialX} />
+          ))}
+        </View>
+      )}
+
       <View className="px-6 py-4 flex-row items-center justify-between">
         <Pressable onPress={() => router.back()} className="p-2 -ml-2 rounded-full active:bg-slate-100">
           <X size={24} color="#64748b" />
@@ -163,7 +245,6 @@ export default function InteractiveActivity() {
                 "{steps[currentStepIndex].text}"
               </Text>
 
-              {/* Botões de Múltipla Escolha */}
               <View className="gap-y-3">
                 {steps[currentStepIndex].options?.map((option: any, index: number) => {
                   const isSelected = selectedOptionIndex === index;
@@ -190,7 +271,6 @@ export default function InteractiveActivity() {
                         {isSelected && <CheckCircle2 size={20} color="#8B5CF6" />}
                       </Pressable>
 
-                      {/* Feedback Condicional Animado */}
                       <AnimatePresence>
                         {isSelected && option.feedback && (
                           <MotiView
@@ -209,7 +289,6 @@ export default function InteractiveActivity() {
                   );
                 })}
               </View>
-
             </MotiView>
           ) : (
             <MotiView
@@ -235,20 +314,11 @@ export default function InteractiveActivity() {
               >
                 <Text className="text-sm font-bold text-purple-700">+100 XP Adquiridos!</Text>
               </MotiView>
-
-              <ConfettiCannon 
-                count={150} 
-                origin={{x: -10, y: 0}} 
-                fallSpeed={2500} 
-                fadeOut={true} 
-                autoStart={true} 
-              />
             </MotiView>
           )}
         </AnimatePresence>
       </ScrollView>
 
-      {/* Footer / Botão de Ação */}
       <View style={{ paddingBottom: 34, backgroundColor: '#FAFAFA' }}>
         {!isFinished ? (
           <Pressable 
@@ -275,7 +345,6 @@ export default function InteractiveActivity() {
           </Pressable>
         )}
       </View>
-
     </SafeAreaView>
   );
 }
