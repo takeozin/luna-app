@@ -161,14 +161,15 @@ export default function InteractiveActivity() {
       // Salva progresso detalhado e respostas no Supabase
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
-        // Detecta a categoria real do módulo pelo prefixo do ID
-        const categoryMap: Record<string, string> = {
-          'anx': 'ansiedade', 'conf': 'autoconfianca', 'focus': 'foco',
-          'pub': 'falar_em_publico', 'burn': 'burnout', 'sleep': 'sono',
-          'rel': 'relacionamentos', 'behav': 'comportamentos',
+        // Detecta a categoria real do módulo pela faixa numérica (ex: 1xx = ansiedade, 2xx = autoconfianca)
+        const moduleIdNum = parseInt(id as string, 10);
+        const categoryMap: Record<number, string> = {
+          1: 'ansiedade', 2: 'autoconfianca', 3: 'foco',
+          4: 'falar_em_publico', 5: 'burnout', 6: 'sono',
+          7: 'relacionamentos', 8: 'comportamentos',
         };
-        const prefix = (id as string).split('-')[0];
-        const category = categoryMap[prefix] || 'geral';
+        const catIdx = Math.floor(moduleIdNum / 100);
+        const category = categoryMap[catIdx] || 'geral';
 
         await supabase.from('lesson_progress').upsert({
           user_id: session.user.id,
@@ -189,7 +190,7 @@ export default function InteractiveActivity() {
         }
       }
     } catch (e) {
-      console.log('Erro ao salvar progresso no Supabase:', e);
+      console.log(`[UnlockContext] Erro ao sincronizar módulo [${id}]:`, e);
     } finally {
       setIsSaving(false);
       router.back();
