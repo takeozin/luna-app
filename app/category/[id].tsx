@@ -8,8 +8,7 @@ import { categoryModules } from "../data/mockData";
 import { CBT_EXPERT_DATA } from "../data/activitiesData";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
-import { supabase } from "../../lib/supabase";
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useUnlock } from "../../lib/unlockContext";
 
 const getCategoryDetails = (numericId: number) => {
   switch (numericId) {
@@ -44,49 +43,8 @@ export default function CategoryScreen() {
   const categoryDetails = getCategoryDetails(numericId);
   const modules = categoryModules[numericId] || [];
 
-  const [completedModules, setCompletedModules] = useState<string[]>([]);
-  const [isLoadingProgress, setIsLoadingProgress] = useState(true);
+  const { completedModules, isLoading: isLoadingProgress } = useUnlock();
 
-  const fetchProgress = async () => {
-    try {
-      setIsLoadingProgress(true);
-      
-      // Local fallback first
-      const localProgressJson = await AsyncStorage.getItem('@completed_modules');
-      const localProgress: string[] = localProgressJson ? JSON.parse(localProgressJson) : [];
-
-      // Supabase fetch (if auth is available)
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      let supabaseProgress: string[] = [];
-      if (session?.user) {
-        const { data, error } = await supabase
-          .from('lesson_progress')
-          .select('module_id')
-          .eq('user_id', session.user.id)
-          .eq('status', 'completed');
-
-        if (!error && data) {
-          supabaseProgress = data.map(d => String(d.module_id));
-        }
-      }
-
-      // Merge results to support both authenticated and anonymous usage
-      const mergedProgress = Array.from(new Set([...localProgress, ...supabaseProgress]));
-      setCompletedModules(mergedProgress);
-
-    } catch (e) {
-      console.log('Erro ao buscar progresso:', e);
-    } finally {
-      setIsLoadingProgress(false);
-    }
-  };
-
-  useFocusEffect(
-    useCallback(() => {
-      fetchProgress();
-    }, [categoryId])
-  );
 
   return (
     <View className="flex-1 bg-background">

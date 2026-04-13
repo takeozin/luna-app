@@ -50,8 +50,8 @@ export default function SettingsScreen() {
 
   const handleClearChat = async () => {
     Alert.alert(
-      "Limpar TUDO?",
-      "Isso apagará mensagens, sessões e humores. Teste completo do zero.",
+      "Limpar Histórico?",
+      "Isso apagará mensagens, sessões e registros de humor do banco de dados. O XP local não será afetado.",
       [
         { text: "Cancelar", style: "cancel" },
         { 
@@ -61,60 +61,50 @@ export default function SettingsScreen() {
             try {
               const { data: { user } } = await supabase.auth.getUser();
               if (!user) {
-                Alert.alert("Erro", "Usuário não autenticado no Supabase!");
+                Alert.alert("Erro", "Usuário não autenticado!");
                 return;
               }
 
-              console.log("Tentando limpar para o ID:", user.id);
-
               // 1. Pegar IDs de todas as sessões
-              const { data: sessions, error: sFetchErr } = await supabase
+              const { data: sessions } = await supabase
                 .from('chat_sessions')
                 .select('id')
                 .eq('user_id', user.id);
-
-              if (sFetchErr) throw new Error(`Falha ao buscar sessões: ${sFetchErr.message}`);
 
               const sessionIds = sessions?.map(s => s.id) || [];
               let msgCount = 0;
 
               // 2. Deletar mensagens
               if (sessionIds.length > 0) {
-                const { data: delMsgs, error: mErr } = await supabase
+                const { data: delMsgs } = await supabase
                   .from('chat_messages')
                   .delete()
                   .in('session_id', sessionIds)
                   .select();
                 msgCount = delMsgs?.length || 0;
-                if (mErr) throw new Error(`Falha nas mensagens: ${mErr.message}`);
               }
 
               // 3. Deletar sessões e humores
-              const { data: delSessions, error: sErr } = await supabase
+              const { data: delSessions } = await supabase
                 .from('chat_sessions')
                 .delete()
                 .eq('user_id', user.id)
                 .select();
               
-              const { data: delMoods, error: moodErr } = await supabase
+              const { data: delMoods } = await supabase
                 .from('mood_entries')
                 .delete()
                 .eq('user_id', user.id)
                 .select();
 
-              if (sErr || moodErr) throw new Error(`Falha final: ${sErr?.message || moodErr?.message}`);
-
               const summary = [
-                `Sua Identidade Luna:`,
-                `${user.id.slice(0, 8)}... (Privado)\n`,
-                `--- Limpeza de Dados ---`,
+                `--- Dados Limpos ---`,
                 `Conversas: ${msgCount}`,
                 `Sessões: ${delSessions?.length || 0}`,
                 `Histórico de Humor: ${delMoods?.length || 0}`,
-                `\nSe algum valor foi '0', verifique se você já registrou novos dados com este ID ou se as Políticas de DELETE estão ativas no Supabase.`
               ].join('\n');
 
-              Alert.alert("Gerenciamento de Dados", summary);
+              Alert.alert("Limpeza Concluída", summary);
             } catch (error: any) {
               Alert.alert("Erro Técnico", error.message);
             }

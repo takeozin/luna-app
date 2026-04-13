@@ -1,6 +1,4 @@
-import { useState, useCallback } from 'react';
-import { useFocusEffect } from 'expo-router';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useMemo } from 'react';
 import { ACHIEVEMENTS, CATEGORY_MODULE_IDS, Achievement } from '../app/data/achievementsData';
 import { useUnlock } from './unlockContext';
 
@@ -11,31 +9,14 @@ export interface UnlockedAchievement extends Achievement {
 /**
  * Hook que calcula dinamicamente quais conquistas estão desbloqueadas
  * com base nos módulos completados e no XP acumulado.
+ * 
+ * Agora lê os dados do UnlockContext (que sincroniza com Supabase),
+ * em vez de depender diretamente do AsyncStorage.
  */
 export function useAchievements() {
-  const { currentXP } = useUnlock();
-  const [completedModules, setCompletedModules] = useState<string[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const { currentXP, completedModules, isLoading } = useUnlock();
 
-  // Recarrega os módulos completados toda vez que a tela fica em foco
-  useFocusEffect(
-    useCallback(() => {
-      const load = async () => {
-        try {
-          const json = await AsyncStorage.getItem('@completed_modules');
-          const modules: string[] = json ? JSON.parse(json) : [];
-          setCompletedModules(modules);
-        } catch (e) {
-          console.error('[useAchievements] Erro ao carregar módulos:', e);
-        } finally {
-          setIsLoading(false);
-        }
-      };
-      load();
-    }, [])
-  );
-
-  const checkRule = useCallback((achievement: Achievement): boolean => {
+  const checkRule = (achievement: Achievement): boolean => {
     const { rule } = achievement;
 
     switch (rule.type) {
@@ -74,13 +55,16 @@ export function useAchievements() {
       default:
         return false;
     }
-  }, [completedModules, currentXP]);
+  };
 
-  // Mapeia todas as conquistas com o estado de desbloqueio
-  const achievements: UnlockedAchievement[] = ACHIEVEMENTS.map(a => ({
-    ...a,
-    unlocked: checkRule(a),
-  }));
+  // Mapeia todas as conquistas com o estado de desbloqueio (memoizado)
+  const achievements: UnlockedAchievement[] = useMemo(
+    () => ACHIEVEMENTS.map(a => ({
+      ...a,
+      unlocked: checkRule(a),
+    })),
+    [completedModules, currentXP]
+  );
 
   const unlockedCount = achievements.filter(a => a.unlocked).length;
   const totalCount = achievements.length;

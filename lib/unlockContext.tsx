@@ -46,6 +46,7 @@ const STORAGE_KEYS = {
   UNLOCKED_CATEGORIES: 'luna_unlocked_categories',
   LUNA_UNLOCKED: 'luna_luna_unlocked_categories',
   USER_XP: 'luna_user_xp',
+  COMPLETED_MODULES: '@completed_modules',
 };
 
 interface UnlockContextType {
@@ -53,10 +54,12 @@ interface UnlockContextType {
   unlockedCategories: number[];
   lunaUnlocked: number[];
   currentXP: number;
+  completedModules: string[];
   isLocked: (categoryId: number) => boolean;
   setRiskAndUnlock: (score: number, answers: Record<number, number>, isQ17: boolean) => Promise<void>;
   unlockCategory: (categoryIds: number[]) => Promise<void>;
   addXP: (amount: number) => Promise<void>;
+  markModuleComplete: (moduleId: string) => Promise<void>;
   isLoading: boolean;
 }
 
@@ -65,10 +68,12 @@ const UnlockContext = createContext<UnlockContextType>({
   unlockedCategories: [],
   lunaUnlocked: [],
   currentXP: 0,
+  completedModules: [],
   isLocked: () => true,
   setRiskAndUnlock: async () => {},
   unlockCategory: async () => {},
   addXP: async () => {},
+  markModuleComplete: async () => {},
   isLoading: true,
 });
 
@@ -101,54 +106,129 @@ export function UnlockProvider({ children }: { children: React.ReactNode }) {
   const [unlockedCategories, setUnlockedCategories] = useState<number[]>([]);
   const [lunaUnlocked, setLunaUnlocked] = useState<number[]>([]);
   const [currentXP, setCurrentXP] = useState<number>(0);
+  const [completedModules, setCompletedModules] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // HELPER: Sincroniza com Supabase se houver sessão
-  const syncToSupabase = useCallback(async (risk: RiskLevel, unlocked: number[], luna: number[]) => {
+  // HELPER: Sincroniza perfil completo com Supabase
+  const syncProfileToSupabase = useCallback(async (
+    risk: RiskLevel, 
+    unlocked: number[], 
+    luna: number[],
+    xp?: number,
+    modules?: string[]
+  ) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
       const allUnlocked = [...new Set([...unlocked, ...luna])];
       
+      const profileData: any = {
+        id: user.id,
+        risk_level: risk,
+        unlocked_categories: allUnlocked,
+        updated_at: new Date().toISOString()
+      };
+
+      // Inclui XP e módulos se fornecidos
+      if (xp !== undefined) profileData.current_xp = xp;
+      if (modules !== undefined) profileData.completed_modules = modules;
+
       const { error } = await supabase
         .from('profiles')
-        .upsert({
-          id: user.id,
-          risk_level: risk,
-          unlocked_categories: allUnlocked,
-          updated_at: new Date().toISOString()
-        });
+        .upsert(profileData);
 
       if (error) console.error('[UnlockContext] Erro ao sincronizar perfil:', error.message);
+      else console.log('[UnlockContext] Perfil sincronizado com Supabase ✅');
     } catch (err) {
       console.error('[UnlockContext] Erro inesperado na sincronia:', err);
     }
   }, []);
 
-  // Carrega estado salvo do AsyncStorage
+  // Carrega estado: primeiro tenta Supabase (fonte de verdade), fallback para AsyncStorage
   useEffect(() => {
     const loadState = async () => {
       try {
-        const [risk, unlocked, lunaUnl, xp] = await Promise.all([
+        // 1. Tenta carregar do Supabase primeiro (fonte de verdade)
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (user) {
+          const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('risk_level, unlocked_categories, current_xp, completed_modules')
+            .eq('id', user.id)
+            .single();
+
+          if (profile && !error) {
+            const cloudRisk = (profile.risk_level as RiskLevel) || 'none';
+            const cloudUnlocked = profile.unlocked_categories || [];
+            const cloudXP = profile.current_xp || 0;
+            const cloudModules = profile.completed_modules || [];
+
+            // 2. Carrega também do AsyncStorage para comparar
+            const [localRisk, localUnlocked, localLunaUnl, localXpStr, localModulesStr] = await Promise.all([
+              AsyncStorage.getItem(STORAGE_KEYS.RISK_LEVEL),
+              AsyncStorage.getItem(STORAGE_KEYS.UNLOCKED_CATEGORIES),
+              AsyncStorage.getItem(STORAGE_KEYS.LUNA_UNLOCKED),
+              AsyncStorage.getItem(STORAGE_KEYS.USER_XP),
+              AsyncStorage.getItem(STORAGE_KEYS.COMPLETED_MODULES),
+            ]);
+
+            const localXP = localXpStr ? parseInt(localXpStr, 10) : 0;
+            const localModules: string[] = localModulesStr ? JSON.parse(localModulesStr) : [];
+            const localLuna: number[] = localLunaUnl ? JSON.parse(localLunaUnl) : [];
+
+            // 3. Usa o MAIOR valor (merge inteligente: nuvem vs local)
+            const mergedXP = Math.max(cloudXP, localXP);
+            const mergedModules = [...new Set([...cloudModules, ...localModules])];
+            const mergedRisk = cloudRisk !== 'none' ? cloudRisk : (localRisk as RiskLevel) || 'none';
+
+            setRiskLevel(mergedRisk);
+            setUnlockedCategories(cloudUnlocked);
+            setLunaUnlocked(localLuna);
+            setCurrentXP(mergedXP);
+            setCompletedModules(mergedModules);
+
+            // 4. Salva o merge de volta em ambos os lados
+            await Promise.all([
+              AsyncStorage.setItem(STORAGE_KEYS.RISK_LEVEL, mergedRisk),
+              AsyncStorage.setItem(STORAGE_KEYS.USER_XP, mergedXP.toString()),
+              AsyncStorage.setItem(STORAGE_KEYS.COMPLETED_MODULES, JSON.stringify(mergedModules)),
+            ]);
+
+            // Se houve diferença, atualiza Supabase com o merge
+            if (mergedXP > cloudXP || mergedModules.length > cloudModules.length) {
+              syncProfileToSupabase(mergedRisk, cloudUnlocked, localLuna, mergedXP, mergedModules);
+            }
+
+            console.log(`[UnlockContext] Carregado com merge: XP=${mergedXP}, Módulos=${mergedModules.length}`);
+            setIsLoading(false);
+            return;
+          }
+        }
+
+        // Fallback: carrega apenas do AsyncStorage (sem internet ou sem login)
+        const [risk, unlocked, lunaUnl, xp, modulesStr] = await Promise.all([
           AsyncStorage.getItem(STORAGE_KEYS.RISK_LEVEL),
           AsyncStorage.getItem(STORAGE_KEYS.UNLOCKED_CATEGORIES),
           AsyncStorage.getItem(STORAGE_KEYS.LUNA_UNLOCKED),
           AsyncStorage.getItem(STORAGE_KEYS.USER_XP),
+          AsyncStorage.getItem(STORAGE_KEYS.COMPLETED_MODULES),
         ]);
         
         const currentRisk = (risk as RiskLevel) || 'none';
         const currentUnlocked = unlocked ? JSON.parse(unlocked) : [];
         const currentLunaUnl = lunaUnl ? JSON.parse(lunaUnl) : [];
         const loadedXP = xp ? parseInt(xp, 10) : 0;
+        const loadedModules: string[] = modulesStr ? JSON.parse(modulesStr) : [];
 
         setRiskLevel(currentRisk);
         setUnlockedCategories(currentUnlocked);
         setLunaUnlocked(currentLunaUnl);
         setCurrentXP(loadedXP);
+        setCompletedModules(loadedModules);
 
-        // Tenta sincronizar com a nuvem após carregar local
-        syncToSupabase(currentRisk, currentUnlocked, currentLunaUnl);
+        console.log(`[UnlockContext] Carregado do AsyncStorage: XP=${loadedXP}, Módulos=${loadedModules.length}`);
       } catch (error) {
         console.error('[UnlockContext] Erro ao carregar estado:', error);
       } finally {
@@ -156,7 +236,7 @@ export function UnlockProvider({ children }: { children: React.ReactNode }) {
       }
     };
     loadState();
-  }, [syncToSupabase]);
+  }, [syncProfileToSupabase]);
 
   const isLocked = useCallback((categoryId: number): boolean => {
     if (riskLevel === 'none') return true;
@@ -183,8 +263,8 @@ export function UnlockProvider({ children }: { children: React.ReactNode }) {
     ]);
 
     // Sincroniza com Supabase
-    syncToSupabase(risk, categories, []);
-  }, [syncToSupabase]);
+    syncProfileToSupabase(risk, categories, []);
+  }, [syncProfileToSupabase]);
 
   const unlockCategory = useCallback(async (categoryIds: number[]) => {
     const allUnlocked = [...new Set([...unlockedCategories, ...lunaUnlocked])];
@@ -197,19 +277,54 @@ export function UnlockProvider({ children }: { children: React.ReactNode }) {
     await AsyncStorage.setItem(STORAGE_KEYS.LUNA_UNLOCKED, JSON.stringify(updated));
 
     // Sincroniza com Supabase
-    syncToSupabase(riskLevel, unlockedCategories, updated);
-  }, [unlockedCategories, lunaUnlocked, riskLevel, syncToSupabase]);
+    syncProfileToSupabase(riskLevel, unlockedCategories, updated, currentXP, completedModules);
+  }, [unlockedCategories, lunaUnlocked, riskLevel, currentXP, completedModules, syncProfileToSupabase]);
 
   const addXP = useCallback(async (amount: number) => {
-    setCurrentXP(prev => {
-      const newXP = prev + amount;
-      AsyncStorage.setItem(STORAGE_KEYS.USER_XP, newXP.toString()).catch(err => 
-        console.error('[UnlockContext] Erro ao salvar XP local:', err)
-      );
-      // Aqui podemos acionar o Supabase futuramente se houver uma coluna XP no perfil
-      return newXP;
-    });
-  }, []);
+    const newXP = currentXP + amount;
+    setCurrentXP(newXP);
+
+    // Salva local
+    await AsyncStorage.setItem(STORAGE_KEYS.USER_XP, newXP.toString());
+
+    // Salva no Supabase
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase
+          .from('profiles')
+          .update({ current_xp: newXP, updated_at: new Date().toISOString() })
+          .eq('id', user.id);
+        console.log(`[UnlockContext] XP sincronizado: ${newXP} ✅`);
+      }
+    } catch (err) {
+      console.error('[UnlockContext] Erro ao sincronizar XP:', err);
+    }
+  }, [currentXP]);
+
+  const markModuleComplete = useCallback(async (moduleId: string) => {
+    if (completedModules.includes(moduleId)) return;
+
+    const updated = [...completedModules, moduleId];
+    setCompletedModules(updated);
+
+    // Salva local
+    await AsyncStorage.setItem(STORAGE_KEYS.COMPLETED_MODULES, JSON.stringify(updated));
+
+    // Salva no Supabase
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase
+          .from('profiles')
+          .update({ completed_modules: updated, updated_at: new Date().toISOString() })
+          .eq('id', user.id);
+        console.log(`[UnlockContext] Módulos sincronizados: ${updated.length} ✅`);
+      }
+    } catch (err) {
+      console.error('[UnlockContext] Erro ao sincronizar módulos:', err);
+    }
+  }, [completedModules]);
 
   return (
     <UnlockContext.Provider value={{
@@ -217,10 +332,12 @@ export function UnlockProvider({ children }: { children: React.ReactNode }) {
       unlockedCategories,
       lunaUnlocked,
       currentXP,
+      completedModules,
       isLocked,
       setRiskAndUnlock,
       unlockCategory,
       addXP,
+      markModuleComplete,
       isLoading,
     }}>
       {children}

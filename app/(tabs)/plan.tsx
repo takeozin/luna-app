@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { View, Text, Pressable, ScrollView, Dimensions, Alert } from "react-native";
 import { useRouter, useFocusEffect } from "expo-router";
 import { MotiView } from "moti";
@@ -7,7 +7,6 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useUnlock } from "../../lib/unlockContext";
 import { libraryCategories, categoryModules } from "../data/mockData";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import Svg, { Path } from "react-native-svg";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
@@ -21,25 +20,15 @@ export default function MyPlan() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [completedIds, setCompletedIds] = useState<string[]>([]);
-  const { isLocked, riskLevel, unlockedCategories, lunaUnlocked, currentXP } = useUnlock();
+  const { isLocked, riskLevel, unlockedCategories, lunaUnlocked, currentXP, completedModules } = useUnlock();
   
   // Combine all unlocked items
   const allUnlocked = [...new Set([...unlockedCategories, ...lunaUnlocked])];
 
-  // Refresh progress when screen is focused
-  useFocusEffect(
-    useCallback(() => {
-      const fetchProgress = async () => {
-        try {
-          const localProgressJson = await AsyncStorage.getItem('@completed_modules');
-          if (localProgressJson) {
-            setCompletedIds(JSON.parse(localProgressJson));
-          }
-        } catch (e) {}
-      };
-      fetchProgress();
-    }, [])
-  );
+  // Sincroniza completedIds com o contexto centralizado (já vem do Supabase)
+  useEffect(() => {
+    setCompletedIds(completedModules);
+  }, [completedModules]);
 
   // Tela especial para "sem tratamento"
   if (riskLevel === 'none') {

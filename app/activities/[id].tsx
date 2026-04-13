@@ -83,7 +83,7 @@ const ConfettiParticle = ({ delay, color, initialX }: { delay: number, color: st
 export default function InteractiveActivity() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
-  const { addXP } = useUnlock();
+  const { addXP, markModuleComplete } = useUnlock();
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -144,32 +144,39 @@ export default function InteractiveActivity() {
       setIsSaving(true);
       const clinicalNotes = userAnswers.join(' | ');
 
-      try {
-        const localProgressJson = await AsyncStorage.getItem('@completed_modules');
-        const localProgress: string[] = localProgressJson ? JSON.parse(localProgressJson) : [];
-        if (!localProgress.includes(id as string)) {
-          localProgress.push(id as string);
-          await AsyncStorage.setItem('@completed_modules', JSON.stringify(localProgress));
-          await addXP(100);
-        }
+      // Marca módulo como concluído (salva local + Supabase automaticamente)
+      await markModuleComplete(id as string);
+      await addXP(100);
 
+      // Salva respostas localmente para histórico
+      try {
         const localAnswersJson = await AsyncStorage.getItem('@activity_responses');
         const localAnswers = localAnswersJson ? JSON.parse(localAnswersJson) : [];
         localAnswers.unshift({ module_title: title, responses: clinicalNotes, date: new Date().toISOString() });
         await AsyncStorage.setItem('@activity_responses', JSON.stringify(localAnswers.slice(0, 10)));
       } catch (localErr) {
-        console.log('Erro ao salvar no AsyncStorage:', localErr);
+        console.log('Erro ao salvar respostas no AsyncStorage:', localErr);
       }
 
+      // Salva progresso detalhado e respostas no Supabase
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
+        // Detecta a categoria real do módulo pelo prefixo do ID
+        const categoryMap: Record<string, string> = {
+          'anx': 'ansiedade', 'conf': 'autoconfianca', 'focus': 'foco',
+          'pub': 'falar_em_publico', 'burn': 'burnout', 'sleep': 'sono',
+          'rel': 'relacionamentos', 'behav': 'comportamentos',
+        };
+        const prefix = (id as string).split('-')[0];
+        const category = categoryMap[prefix] || 'geral';
+
         await supabase.from('lesson_progress').upsert({
           user_id: session.user.id,
-          category: 'ansiedade',
+          category: category,
           module_id: id as string,
           completed_lessons: 1,
           status: 'completed',
-          updated_at: new Date().toISOString(),
+          last_activity: new Date().toISOString(),
         }, { onConflict: 'user_id, category, module_id' });
 
         if (clinicalNotes.length > 0) {
