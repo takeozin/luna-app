@@ -269,8 +269,8 @@ export default function InteractiveActivity() {
                           ${isSelected 
                             ? 'bg-purple-50 border-[#8B5CF6]' 
                             : hasSelection 
-                              ? 'bg-white border-slate-200 opacity-60 active:opacity-100' 
-                              : 'bg-white border-slate-200 active:border-purple-300 active:bg-slate-50'
+                              ? 'bg-card border-slate-200 opacity-60 active:opacity-100' 
+                              : 'bg-card border-slate-200 active:border-purple-300 active:bg-slate-50'
                           }`}
                       >
                         <Text className={`font-semibold flex-1 ${isSelected ? 'text-[#8B5CF6]' : 'text-slate-700'}`}>

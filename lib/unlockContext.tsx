@@ -80,6 +80,9 @@ const UnlockContext = createContext<UnlockContextType>({
 export const useUnlock = () => useContext(UnlockContext);
 
 import { supabase } from './supabase';
+import * as Haptics from 'expo-haptics';
+import { useTheme } from './themeContext';
+
 
 export function calculateRiskLevel(score: number, isQ17Positive: boolean): RiskLevel {
   if (isQ17Positive || score >= 11) return 'critical';
@@ -108,6 +111,7 @@ export function UnlockProvider({ children }: { children: React.ReactNode }) {
   const [currentXP, setCurrentXP] = useState<number>(0);
   const [completedModules, setCompletedModules] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { hapticsEnabled } = useTheme();
 
   // HELPER: Sincroniza perfil completo com Supabase
   const syncProfileToSupabase = useCallback(async (
@@ -284,6 +288,14 @@ export function UnlockProvider({ children }: { children: React.ReactNode }) {
     const newXP = currentXP + amount;
     setCurrentXP(newXP);
 
+    if (hapticsEnabled) {
+      if (amount >= 50) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      } else {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+    }
+
     // Salva local
     await AsyncStorage.setItem(STORAGE_KEYS.USER_XP, newXP.toString());
 
@@ -304,6 +316,10 @@ export function UnlockProvider({ children }: { children: React.ReactNode }) {
 
   const markModuleComplete = useCallback(async (moduleId: string) => {
     if (completedModules.includes(moduleId)) return;
+
+    if (hapticsEnabled) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
 
     const updated = [...completedModules, moduleId];
     setCompletedModules(updated);

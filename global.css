@@ -1,3 +1,61 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  :root {
+    --background: #FFFFFF;
+    --foreground: #1E1E1E;
+    --muted: #F4F4F5;
+    --muted-foreground: #71717A;
+    --primary: #1E1E1E;
+    --primary-foreground: #FFFFFF;
+    --secondary: #A9C9FF; /* Base Calm config */
+    --card: #FFFFFF;
+  }
+
+  .theme-calm {
+    --background: #f8fbff;
+    --foreground: #1E1E1E;
+    --muted: #F4F4F5;
+    --muted-foreground: #71717A;
+    --primary: #5c8edb;
+    --primary-foreground: #FFFFFF;
+    --secondary: #A9C9FF;
+    --card: #FFFFFF;
+  }
+
+  .theme-focus {
+    --background: #f4faf8;
+    --foreground: #1E1E1E;
+    --muted: #F4F4F5;
+    --muted-foreground: #71717A;
+    --primary: #4a8a76;
+    --primary-foreground: #FFFFFF;
+    --secondary: #B8E0D2;
+    --card: #FFFFFF;
+  }
+
+  .theme-energy {
+    --background: #fff9f2;
+    --foreground: #1E1E1E;
+    --muted: #F4F4F5;
+    --muted-foreground: #71717A;
+    --primary: #d48c3d;
+    --primary-foreground: #FFFFFF;
+    --secondary: #FFD9B0;
+    --card: #FFFFFF;
+  }
+
+  .theme-oled {
+    --background: #313338;
+    --foreground: #F2F3F5;
+    --muted: #2B2D31;
+    --muted-foreground: #949BA4;
+    --primary: #5865F2;
+    --primary-foreground: #FFFFFF;
+    --secondary: #1E1F22;
+    --card: #2B2D31;
+  }
+}
+

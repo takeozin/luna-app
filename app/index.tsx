@@ -10,10 +10,7 @@ export default function Welcome() {
   const insets = useSafeAreaInsets();
 
   return (
-    <LinearGradient
-      colors={['#F0F7FF', '#FFFFFF']}
-      style={{ flex: 1 }}
-    >
+    <View className="flex-1 bg-background">
       <View className="flex-1 items-center justify-center px-6" style={{ paddingTop: insets.top, paddingBottom: insets.bottom }}>
         <MotiView
           from={{ opacity: 0, translateY: 20 }}
@@ -30,13 +27,13 @@ export default function Welcome() {
           />
 
           <Text
-            className="text-3xl text-slate-900 text-center font-semibold mb-4"
+            className="text-3xl text-foreground text-center font-semibold mb-4"
           >
             Oi! Que bom ter você aqui.
           </Text>
 
           <Text
-            className="text-lg text-slate-600 text-center mb-8"
+            className="text-lg text-muted-foreground text-center mb-8"
           >
             Vamos começar uma jornada de autoconhecimento? Primeiro, preciso te conhecer um pouquinho.
           </Text>
@@ -58,6 +55,6 @@ export default function Welcome() {
           </MotiView>
         </MotiView>
       </View>
-    </LinearGradient>
+    </View>
   );
 }

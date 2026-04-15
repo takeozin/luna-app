@@ -88,7 +88,7 @@ export default function MyPlan() {
             const hasCompletedAnyInCat = modules.some(m => completedIds.includes(m.id.toString()));
             
             // ALWAYS unlock the first chapter by default, or if they have past progress, or if Luna authorized it
-            const isCatUnlocked = catIndex === 0 || hasCompletedAnyInCat || allUnlocked.includes(catKey);
+            const isCatUnlocked = catIndex === 0 || hasCompletedAnyInCat || allUnlocked.includes(cat.id);
             
             let firstLockedFound = false;
 
@@ -99,18 +99,18 @@ export default function MyPlan() {
                 <View 
                   className={`w-full p-5 rounded-3xl mb-8 flex-row items-center border-b-4`}
                   style={{ 
-                    backgroundColor: isCatUnlocked ? cat.color : '#E2E8F0',
-                    borderColor: isCatUnlocked ? 'rgba(0,0,0,0.1)' : '#CBD5E1'
+                    backgroundColor: isCatUnlocked ? cat.color : 'rgba(0,0,0,0.05)',
+                    borderColor: isCatUnlocked ? 'rgba(0,0,0,0.1)' : 'rgba(0,0,0,0.1)'
                   }}
                 >
                   <View className="w-12 h-12 bg-white/40 rounded-full items-center justify-center mr-4">
                     <Text className="text-2xl">{cat.icon}</Text>
                   </View>
                   <View className="flex-1">
-                    <Text className="text-xl font-bold text-slate-800">
+                    <Text className={`text-xl font-bold ${isCatUnlocked ? 'text-slate-800' : 'text-muted-foreground'}`}>
                       Capítulo {catIndex + 1}
                     </Text>
-                    <Text className="text-base font-semibold text-slate-700">
+                    <Text className={`text-base font-semibold ${isCatUnlocked ? 'text-slate-700' : 'text-muted-foreground'}`}>
                       {cat.name}
                     </Text>
                     {!isCatUnlocked && (
@@ -162,7 +162,7 @@ export default function MyPlan() {
                             {/* Outer stroke */}
                             <Path 
                               d={`M ${100 + offset} 20 C ${100 + offset} 70, ${100 + nextOffset} 90, ${100 + nextOffset} 140`}
-                              stroke={status === 'completed' ? cat.color : '#E2E8F0'}
+                              stroke={status === 'completed' ? cat.color : 'rgba(0,0,0,0.1)'}
                               strokeWidth="16"
                               fill="none"
                               strokeLinecap="round"
@@ -170,7 +170,7 @@ export default function MyPlan() {
                             {/* Inner highlight stroke */}
                             <Path 
                               d={`M ${100 + offset} 20 C ${100 + offset} 70, ${100 + nextOffset} 90, ${100 + nextOffset} 140`}
-                              stroke={status === 'completed' ? 'rgba(255,255,255,0.4)' : '#CBD5E1'}
+                              stroke={status === 'completed' ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.05)'}
                               strokeWidth="6"
                               fill="none"
                               strokeLinecap="round"
@@ -189,8 +189,8 @@ export default function MyPlan() {
                           onPress={handlePress}
                           className={`w-20 h-20 rounded-full border-[6px] items-center justify-center shadow-sm`}
                           style={{ 
-                            backgroundColor: status === 'locked' ? '#E2E8F0' : cat.color,
-                            borderColor: status === 'locked' ? '#CBD5E1' : 'white',
+                            backgroundColor: status === 'locked' ? 'rgba(0,0,0,0.05)' : cat.color,
+                            borderColor: status === 'locked' ? 'rgba(0,0,0,0.1)' : 'white',
                             opacity: 1,
                             elevation: status === 'current' ? 10 : 2,
                             shadowColor: status === 'current' ? cat.color : '#000',
@@ -204,10 +204,10 @@ export default function MyPlan() {
                         </Pressable>
                         
                         {/* Node Label */}
-                        <View className="mt-2 text-center w-36 bg-white/90 px-3 py-2 rounded-xl shadow-sm border border-slate-100 items-center justify-center">
+                        <View className="mt-2 text-center w-36 bg-card/90 px-3 py-2 rounded-xl shadow-sm border border-border items-center justify-center">
                            <Text 
                             numberOfLines={2} 
-                            className={`text-xs text-center font-bold leading-tight ${status === 'locked' ? 'text-slate-400' : 'text-slate-700'}`}
+                            className={`text-xs text-center font-bold leading-tight ${status === 'locked' ? 'text-muted-foreground' : 'text-foreground'}`}
                            >
                             {node.title}
                            </Text>

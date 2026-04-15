@@ -9,13 +9,14 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        background: '#FFFFFF',
-        foreground: '#1E1E1E',
-        muted: '#F4F4F5',
-        'muted-foreground': '#71717A',
-        primary: '#1E1E1E',
-        'primary-foreground': '#FFFFFF',
-        secondary: '#A9C9FF',
+        background: 'var(--background)',
+        foreground: 'var(--foreground)',
+        muted: 'var(--muted)',
+        'muted-foreground': 'var(--muted-foreground)',
+        primary: 'var(--primary)',
+        'primary-foreground': 'var(--primary-foreground)',
+        secondary: 'var(--secondary)',
+        card: 'var(--card)',
       }
     },
   },

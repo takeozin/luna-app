@@ -89,7 +89,7 @@ export default function Home() {
           <View className="flex-row gap-3">
             <Pressable
               onPress={() => router.push("/notifications")}
-              className="w-10 h-10 rounded-full bg-white items-center justify-center shadow-sm active:opacity-70 active:scale-95 transition-all"
+              className="w-10 h-10 rounded-full bg-card items-center justify-center shadow-sm active:opacity-70 active:scale-95 transition-all"
               style={{ 
                 elevation: 3,
                 shadowColor: "#000",
@@ -102,7 +102,7 @@ export default function Home() {
             </Pressable>
             <Pressable
               onPress={() => router.push("/settings")}
-              className="w-10 h-10 rounded-full bg-white items-center justify-center shadow-sm active:opacity-70 active:scale-95 transition-all"
+              className="w-10 h-10 rounded-full bg-card items-center justify-center shadow-sm active:opacity-70 active:scale-95 transition-all"
               style={{ 
                 elevation: 3,
                 shadowColor: "#000",

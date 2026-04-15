@@ -62,7 +62,7 @@ export default function LibraryScreen() {
         </Text>
 
         {/* Search */}
-        <View className="flex-row items-center bg-white rounded-[30px] border border-[#F0F0F0] px-4 py-3 shadow-sm" style={{ elevation: 2, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 5 }}>
+        <View className="flex-row items-center bg-card rounded-[30px] border border-[#F0F0F0] px-4 py-3 shadow-sm" style={{ elevation: 2, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 5 }}>
           <Search size={20} color="#a1a1aa" />
           <TextInput
             value={searchQuery}

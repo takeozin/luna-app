@@ -183,7 +183,7 @@ export default function Anamnese() {
 
   if (loading) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
+      <View className="flex-1 items-center justify-center bg-background">
         <ActivityIndicator size="large" color="#A9C9FF" />
       </View>
     );
@@ -192,24 +192,24 @@ export default function Anamnese() {
   if (cooldownTarget !== null) {
     if (!timeLeft) {
       return (
-        <View className="flex-1 items-center justify-center bg-white">
+        <View className="flex-1 items-center justify-center bg-background">
           <ActivityIndicator size="large" color="#A9C9FF" />
         </View>
       );
     }
 
     return (
-      <LinearGradient colors={["#F8FAFC", "#FFFFFF"]} style={{ flex: 1 }}>
+      <View className="flex-1 bg-background">
         <View className="flex-1 items-center justify-center px-8" style={{ paddingTop: insets.top }}>
           <View className="w-20 h-20 bg-slate-100 rounded-full items-center justify-center mb-8">
             <Clock color="#64748b" size={40} />
           </View>
-          <Text className="text-3xl font-bold text-slate-900 mb-4 text-center">Oi de novo! 🌙</Text>
-          <Text className="text-lg text-slate-600 text-center mb-10 leading-6">
+          <Text className="text-3xl font-bold text-foreground mb-4 text-center">Oi de novo! 🌙</Text>
+          <Text className="text-lg text-muted-foreground text-center mb-10 leading-6">
             Você já realizou sua triagem nos últimos 15 dias. O ideal é que as avaliações tenham esse intervalo para acompanharmos seu progresso real.
           </Text>
-          <Card className="w-full p-6 mb-8 border-dashed border-2 border-[#A9C9FF] justify-center items-center">
-            <Text className="text-center text-slate-500 font-medium mb-5">Próxima avaliação em:</Text>
+          <Card className="w-full p-6 mb-8 border-dashed border-2 border-[#A9C9FF] bg-card justify-center items-center">
+            <Text className="text-center text-muted-foreground font-medium mb-5">Próxima avaliação em:</Text>
             
             <View className="flex-row justify-center items-center w-full mb-2">
               <View className="flex-1 items-center border-r border-[#A9C9FF]/30">
@@ -230,11 +230,11 @@ export default function Anamnese() {
               </View>
             </View>
           </Card>
-          <Button variant="outline" onPress={() => router.replace("/(tabs)")} className="w-full border-slate-200">
-            <Text className="text-slate-600 font-semibold text-base">Voltar para o Menu</Text>
+          <Button variant="outline" onPress={() => router.replace("/(tabs)")} className="w-full border-border bg-card">
+            <Text className="text-foreground font-semibold text-base">Voltar para o Menu</Text>
           </Button>
         </View>
-      </LinearGradient>
+      </View>
     );
   }
 
@@ -242,7 +242,7 @@ export default function Anamnese() {
   const progress = ((currentQuestion + 1) / questions.length) * 100;
 
   return (
-    <LinearGradient colors={["#F8FAFC", "#FFFFFF"]} style={{ flex: 1 }}>
+    <View className="flex-1 bg-background">
       <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingTop: insets.top + 24, paddingBottom: insets.bottom + 24 }}>
         <View className="mb-8 max-w-md mx-auto w-full">
           <View className="flex-row items-center justify-between mb-2">
@@ -254,17 +254,17 @@ export default function Anamnese() {
         </View>
 
         <View className="flex-row items-center gap-3 mb-6 max-w-md mx-auto w-full">
-          <View className="w-10 h-10 rounded-full overflow-hidden bg-slate-100 items-center justify-center">
-            <Moon size={20} color="#64748b" />
+          <View className="w-10 h-10 rounded-full overflow-hidden bg-muted items-center justify-center">
+            <Moon size={20} color="#A9C9FF" />
           </View>
-          <Text className="text-sm font-bold text-slate-800 uppercase tracking-widest">Luna</Text>
+          <Text className="text-sm font-bold text-foreground uppercase tracking-widest">Luna</Text>
         </View>
 
         <MotiView key={`q-${currentQuestion}`} from={{ opacity: 0, translateX: 50 }} animate={{ opacity: 1, translateX: 0 }} transition={{ type: "timing", duration: 300 }} className="max-w-md mx-auto w-full">
-          <Card className="mb-6 border-0 shadow-sm bg-white">
+          <Card className="mb-6 border-0 shadow-sm bg-card">
             <View className="flex-row items-center gap-4 p-2">
-              <View className="w-12 h-12 bg-slate-50 rounded-xl items-center justify-center">{question.icon}</View>
-              <Text className="text-lg font-semibold text-slate-800 flex-1 leading-6">{question.question}</Text>
+              <View className="w-12 h-12 bg-muted rounded-xl items-center justify-center">{question.icon}</View>
+              <Text className="text-lg font-semibold text-foreground flex-1 leading-6">{question.question}</Text>
             </View>
           </Card>
 
@@ -278,6 +278,6 @@ export default function Anamnese() {
           </View>
         </MotiView>
       </ScrollView>
-    </LinearGradient>
+    </View>
   );
 }

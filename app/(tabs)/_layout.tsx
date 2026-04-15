@@ -1,20 +1,24 @@
 import { Tabs } from "expo-router";
 import { Home, Clipboard, MessageCircle, Library, TrendingUp } from "lucide-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTheme, rawColors } from "../../lib/themeContext";
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
+  const { activeTheme } = useTheme();
+  
+  const currentColors = rawColors[activeTheme] || rawColors.calm;
 
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: "#A9C9FF",
-        tabBarInactiveTintColor: "#64748b",
+        tabBarActiveTintColor: currentColors.activeIcon,
+        tabBarInactiveTintColor: currentColors.icon,
         tabBarStyle: {
-          backgroundColor: "#ffffff",
+          backgroundColor: currentColors.card,
           borderTopWidth: 1,
-          borderTopColor: "#e2e8f0",
+          borderTopColor: currentColors.border,
           elevation: 10,
           shadowColor: "#000",
           shadowOpacity: 0.1,

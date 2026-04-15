@@ -88,7 +88,7 @@ export default function NotificationsScreen() {
                   <View className="flex-row items-start gap-4">
                     <View 
                       className="w-10 h-10 rounded-full items-center justify-center"
-                      style={{ backgroundColor: item.read ? '#F4F4F5' : item.color }}
+                      style={{ backgroundColor: item.read ? 'rgba(0,0,0,0.05)' : item.color }}
                     >
                       {item.icon}
                     </View>
@@ -120,20 +120,19 @@ export default function NotificationsScreen() {
 
   return (
     <View className="flex-1 bg-background">
-      <LinearGradient
-        colors={["rgba(169, 201, 255, 0.15)", "rgba(255, 255, 255, 0)"]}
+      <View
         style={{ paddingTop: insets.top + 20, paddingBottom: 24, paddingHorizontal: 24 }}
       >
         <Pressable 
           onPress={() => router.back()} 
           className="flex-row items-center gap-2 mb-4 active:opacity-60"
         >
-          <ArrowLeft size={20} color="#71717A" />
+          <ArrowLeft size={20} color="gray" />
           <Text className="text-muted-foreground font-medium">Voltar</Text>
         </Pressable>
         <Text className="text-3xl font-bold text-foreground mb-1">Notificações</Text>
         <Text className="text-muted-foreground">Acompanhe suas atualizações</Text>
-      </LinearGradient>
+      </View>
 
       <ScrollView 
         contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 40 }}

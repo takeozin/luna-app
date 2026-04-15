@@ -105,7 +105,7 @@ export default function CategoryScreen() {
                     onPress={() => router.push(`/activities/${module.id}` as any)}
                     className="active:opacity-80"
                   >
-                    <Card className={`border-0 shadow-sm p-5 rounded-3xl flex-row items-center gap-4 ${isCompleted ? 'bg-green-50 border-2 border-green-500/20' : 'bg-white'}`}>
+                    <Card className={`border-0 shadow-sm p-5 rounded-3xl flex-row items-center gap-4 ${isCompleted ? 'bg-green-50 border-2 border-green-500/20' : 'bg-card'}`}>
                       <View 
                         className={`w-14 h-14 rounded-full items-center justify-center flex-shrink-0 ${isCompleted ? 'bg-green-100' : 'bg-gray-50 border border-gray-100'}`}
                       >

@@ -59,7 +59,7 @@ export default function AnamneseResult() {
   // === TELA: Score 0-3 - "Sem Tratamento" ===
   if (riskLevel === 'none') {
     return (
-      <LinearGradient colors={["#F0FDF4", "#ECFDF5", "#FFFFFF"]} style={{ flex: 1 }}>
+      <View className="flex-1 bg-background">
         <ScrollView
           contentContainerStyle={{
             paddingHorizontal: 24,
@@ -92,7 +92,7 @@ export default function AnamneseResult() {
               animate={{ opacity: 1, translateY: 0 }}
               transition={{ delay: 600 }}
             >
-              <Text className="text-3xl font-bold text-center text-slate-900 mb-4">
+              <Text className="text-3xl font-bold text-center text-foreground mb-4">
                 Você está bem! 💚
               </Text>
             </MotiView>
@@ -103,7 +103,7 @@ export default function AnamneseResult() {
               animate={{ opacity: 1, translateY: 0 }}
               transition={{ delay: 800 }}
             >
-              <Text className="text-base text-center text-slate-500 mb-10 leading-7 px-4">
+              <Text className="text-base text-center text-muted-foreground mb-10 leading-7 px-4">
                 Sua avaliação indica que você está em equilíbrio emocional. Não há necessidade de 
                 tratamento agora — apenas continue cuidando de você como tem feito!
               </Text>
@@ -116,13 +116,13 @@ export default function AnamneseResult() {
               transition={{ delay: 1000 }}
               className="w-full mb-10"
             >
-              <Card className="border-0 shadow-sm" style={{ backgroundColor: 'rgba(22, 163, 74, 0.06)' }}>
+              <Card className="border-0 shadow-sm bg-card" style={{ backgroundColor: 'rgba(22, 163, 74, 0.06)' }}>
                 <View className="items-center py-2">
                   <Text className="text-5xl mb-4">🌿</Text>
-                  <Text className="text-base font-semibold text-slate-700 text-center mb-2">
+                  <Text className="text-base font-semibold text-foreground text-center mb-2">
                     Continue assim!
                   </Text>
-                  <Text className="text-sm text-slate-500 text-center leading-5 px-2">
+                  <Text className="text-sm text-muted-foreground text-center leading-5 px-2">
                     Manter hábitos saudáveis e o autoconhecimento é a melhor prevenção. 
                     Faremos uma nova avaliação em 15 dias para acompanhar você.
                   </Text>
@@ -149,7 +149,7 @@ export default function AnamneseResult() {
             </MotiView>
           </MotiView>
         </ScrollView>
-      </LinearGradient>
+      </View>
     );
   }
 
@@ -190,7 +190,7 @@ export default function AnamneseResult() {
   const lockedList = ALL_CATEGORIES.filter(c => !unlockedCategoryIds.includes(c.id));
 
   return (
-    <LinearGradient colors={config.gradient} style={{ flex: 1 }}>
+    <View className="flex-1 bg-background">
       <ScrollView
         contentContainerStyle={{
           paddingHorizontal: 24,
@@ -217,11 +217,11 @@ export default function AnamneseResult() {
             </MotiView>
           </View>
 
-          <Text className="text-3xl text-center mb-4 text-slate-900 font-bold">
+          <Text className="text-3xl text-center mb-4 text-foreground font-bold">
             {config.title}
           </Text>
 
-          <Text className="text-center text-slate-600 mb-6 text-base leading-6">
+          <Text className="text-center text-muted-foreground mb-6 text-base leading-6">
             {config.subtitle}
           </Text>
 
@@ -251,7 +251,7 @@ export default function AnamneseResult() {
               animate={{ opacity: 1, translateY: 0 }}
               transition={{ delay: 500 }}
             >
-              <Text className="text-lg font-bold text-slate-800 mb-3">
+              <Text className="text-lg font-bold text-foreground mb-3">
                 ✅ Atividades Liberadas para Você
               </Text>
               <View className="gap-3 mb-6">
@@ -262,7 +262,7 @@ export default function AnamneseResult() {
                     animate={{ opacity: 1, translateX: 0 }}
                     transition={{ delay: 600 + index * 100 }}
                   >
-                    <Card className="border-0 shadow-sm">
+                    <Card className="border-0 shadow-sm bg-card">
                       <View className="flex-row items-center gap-4 py-1">
                         <View
                           className="w-14 h-14 rounded-2xl items-center justify-center"
@@ -271,7 +271,7 @@ export default function AnamneseResult() {
                           <Text className="text-2xl">{cat.emoji}</Text>
                         </View>
                         <View className="flex-1">
-                          <Text className="text-base font-semibold text-slate-800">{cat.name}</Text>
+                          <Text className="text-base font-semibold text-foreground">{cat.name}</Text>
                           <Text className="text-xs text-green-600 font-medium mt-1">Desbloqueada</Text>
                         </View>
                         <View className="w-8 h-8 rounded-full items-center justify-center" style={{ backgroundColor: 'rgba(22, 163, 74, 0.1)' }}>
@@ -292,7 +292,7 @@ export default function AnamneseResult() {
               animate={{ opacity: 1, translateY: 0 }}
               transition={{ delay: 800 }}
             >
-              <Text className="text-lg font-bold text-slate-400 mb-3">
+              <Text className="text-lg font-bold text-muted-foreground mb-3">
                 🔒 Disponíveis em Breve
               </Text>
               <View className="gap-3 mb-8">
@@ -303,19 +303,18 @@ export default function AnamneseResult() {
                     animate={{ opacity: 1, translateX: 0 }}
                     transition={{ delay: 900 + index * 80 }}
                   >
-                    <Card className="border-0 shadow-sm" style={{ opacity: 0.5 }}>
+                    <Card className="border-0 shadow-sm bg-card" style={{ opacity: 0.5 }}>
                       <View className="flex-row items-center gap-4 py-1">
                         <View
-                          className="w-14 h-14 rounded-2xl items-center justify-center"
-                          style={{ backgroundColor: '#F0F0F0' }}
+                          className="w-14 h-14 rounded-2xl items-center justify-center bg-muted"
                         >
                           <Text className="text-2xl" style={{ opacity: 0.4 }}>{cat.emoji}</Text>
                         </View>
                         <View className="flex-1">
-                          <Text className="text-base font-semibold text-slate-400">{cat.name}</Text>
-                          <Text className="text-xs text-slate-400 font-medium mt-1">Bloqueada</Text>
+                          <Text className="text-base font-semibold text-muted-foreground">{cat.name}</Text>
+                          <Text className="text-xs text-muted-foreground font-medium mt-1">Bloqueada</Text>
                         </View>
-                        <View className="w-8 h-8 rounded-full bg-slate-100 items-center justify-center">
+                        <View className="w-8 h-8 rounded-full bg-muted items-center justify-center">
                           <Lock size={14} color="#94a3b8" />
                         </View>
                       </View>
@@ -349,6 +348,6 @@ export default function AnamneseResult() {
           </MotiView>
         </MotiView>
       </ScrollView>
-    </LinearGradient>
+    </View>
   );
 }

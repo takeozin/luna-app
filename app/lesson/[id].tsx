@@ -204,7 +204,7 @@ export default function Lesson() {
   };
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-background">
       {/* Header */}
       <View 
         style={{ paddingTop: insets.top + 16, paddingBottom: 16, paddingHorizontal: 24 }}
@@ -317,7 +317,7 @@ export default function Lesson() {
                       className={`w-full p-4 rounded-2xl border-2 transition-colors ${
                         isSelected
                           ? "border-[#B8E0D2] bg-[#B8E0D2]/10"
-                          : "border-gray-100 bg-white"
+                          : "border-gray-100 bg-card"
                       }`}
                     >
                       <Text className={`font-medium ${isSelected ? 'text-[#059669]' : 'text-muted-foreground'}`}>{option}</Text>
@@ -354,14 +354,14 @@ export default function Lesson() {
                           multiline
                           numberOfLines={4}
                           textAlignVertical="top"
-                          className="w-full p-4 rounded-2xl border-2 border-gray-100 bg-gray-50 focus:border-[#B8E0D2] focus:bg-white text-base"
+                          className="w-full p-4 rounded-2xl border-2 border-gray-100 bg-gray-50 focus:border-[#B8E0D2] focus:bg-card text-base"
                         />
                       ) : (
                         <TextInput
                           value={answers[field.label] || ""}
                           onChangeText={(val) => handleFieldChange(field.label, val)}
                           placeholder={field.placeholder}
-                          className="w-full px-4 py-3.5 rounded-2xl border-2 border-gray-100 bg-gray-50 focus:border-[#B8E0D2] focus:bg-white text-base"
+                          className="w-full px-4 py-3.5 rounded-2xl border-2 border-gray-100 bg-gray-50 focus:border-[#B8E0D2] focus:bg-card text-base"
                         />
                       )}
                     </View>
@@ -415,7 +415,7 @@ export default function Lesson() {
                 </Button>
               ) : (
                 <View className="rounded-3xl p-8 min-h-[250px] flex-col items-center justify-center bg-[#B8E0D2]/20">
-                  <AnimatePresence mode="wait">
+                  <AnimatePresence exitBeforeEnter>
                     <MotiView
                       key={exerciseStep}
                       from={{ opacity: 0, scale: 0.9 }}
@@ -441,7 +441,7 @@ export default function Lesson() {
       </ScrollView>
 
       {/* Floating Bottom Bar Navigation */}
-      <View className="absolute bottom-0 left-0 right-0 p-6 bg-white border-t border-gray-100 flex-row gap-3">
+      <View className="absolute bottom-0 left-0 right-0 p-6 bg-card border-t border-gray-100 flex-row gap-3">
         {currentSection > 0 && (
           <Button
             variant="secondary"

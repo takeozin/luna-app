@@ -95,7 +95,7 @@ export default function ProgressScreen() {
             transition={{ type: "spring" }}
             className="mb-6"
           >
-            <Card className="border-0 shadow-sm p-5 bg-white rounded-3xl">
+            <Card className="border-0 shadow-sm p-5 bg-card rounded-3xl">
               <View className="flex-row items-center justify-between mb-3">
                 <View className="flex-row items-center gap-3">
                   <View className="w-14 h-14 rounded-2xl items-center justify-center" style={{ backgroundColor: 'rgba(139, 92, 246, 0.1)' }}>
@@ -140,7 +140,7 @@ export default function ProgressScreen() {
                 transition={{ delay: index * 100, type: "spring" }}
                 className="flex-1"
               >
-                <Card className="border-0 shadow-sm items-center py-5 px-2 bg-white rounded-3xl">
+                <Card className="border-0 shadow-sm items-center py-5 px-2 bg-card rounded-3xl">
                   <View 
                     className="w-12 h-12 rounded-full items-center justify-center mb-3"
                     style={{ backgroundColor: stat.color }}
@@ -161,7 +161,7 @@ export default function ProgressScreen() {
             transition={{ delay: 300, type: "spring" }}
             className="mb-6"
           >
-            <Card className="border-0 shadow-sm p-6 bg-white rounded-3xl">
+            <Card className="border-0 shadow-sm p-6 bg-card rounded-3xl">
               <Text className="text-lg font-bold mb-6 text-foreground">Evolução do Humor (7 dias)</Text>
               
               <View className="h-40 flex-row items-end justify-between px-2">
@@ -222,7 +222,7 @@ export default function ProgressScreen() {
                   animate={{ opacity: 1, translateX: 0 }}
                   transition={{ delay: 500 + i * 80 }}
                 >
-                  <Card className="border-0 shadow-sm p-4 flex-row items-center gap-4 bg-white rounded-2xl">
+                  <Card className="border-0 shadow-sm p-4 flex-row items-center gap-4 bg-card rounded-2xl">
                     <View className="w-14 h-14 rounded-2xl items-center justify-center flex-shrink-0 bg-[#FFD9B0]/40">
                       <Text className="text-2xl">{achievement.icon}</Text>
                     </View>
@@ -243,7 +243,7 @@ export default function ProgressScreen() {
 
               {/* Mensagem se não tem nenhuma conquista ainda */}
               {unlockedCount === 0 && (
-                <Card className="border-0 shadow-sm p-5 bg-white rounded-2xl items-center">
+                <Card className="border-0 shadow-sm p-5 bg-card rounded-2xl items-center">
                   <View className="w-16 h-16 rounded-full bg-gray-100 items-center justify-center mb-3">
                     <Lock size={24} color="#94a3b8" />
                   </View>
@@ -274,7 +274,7 @@ export default function ProgressScreen() {
             onRequestClose={() => setShowAllAchievements(false)}
           >
             <View className="flex-1 bg-black/50 justify-end">
-              <View className="bg-white rounded-t-3xl max-h-[85%]" style={{ paddingBottom: insets.bottom + 20 }}>
+              <View className="bg-card rounded-t-3xl max-h-[85%]" style={{ paddingBottom: insets.bottom + 20 }}>
                 
                 {/* Handle bar */}
                 <View className="items-center pt-3 pb-1">
@@ -364,7 +364,7 @@ export default function ProgressScreen() {
             className="mt-6"
           >
             <View className="rounded-3xl p-[2px] bg-gradient-to-br from-[#A9C9FF] to-[#D6CCFE]">
-              <View className="bg-white/90 rounded-[22px] p-6">
+              <View className="bg-card/90 rounded-[22px] p-6">
                 <View className="flex-row items-center gap-2 mb-3">
                   <Sparkles size={20} color="#8b5cf6" />
                   <Text className="text-lg font-bold text-foreground">Reflexão Mensal</Text>

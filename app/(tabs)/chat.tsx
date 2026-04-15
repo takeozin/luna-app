@@ -466,7 +466,7 @@ export default function ChatScreen() {
           <MotiView
             from={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="items-center bg-white p-10 rounded-[40px] shadow-sm border border-gray-100"
+            className="items-center bg-card p-10 rounded-[40px] shadow-sm border border-gray-100"
           >
             <View className="w-20 h-20 rounded-full items-center justify-center mb-6" style={{ backgroundColor: 'rgba(22, 163, 74, 0.1)' }}>
               <Lock size={36} color="#16a34a" />
@@ -515,7 +515,7 @@ export default function ChatScreen() {
           <MotiView
             from={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="items-center bg-white p-10 rounded-[40px] shadow-sm border border-gray-100"
+            className="items-center bg-card p-10 rounded-[40px] shadow-sm border border-gray-100"
           >
             <View className="w-20 h-20 bg-[#A9C9FF]/10 rounded-full items-center justify-center mb-6">
               <Clock size={40} color="#A9C9FF" />
@@ -543,7 +543,7 @@ export default function ChatScreen() {
 
   return (
     <KeyboardAvoidingView 
-      className="flex-1 bg-[#FAFAFA]"
+      className="flex-1 bg-background"
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
     >
@@ -620,7 +620,7 @@ export default function ChatScreen() {
                 className={`max-w-[80%] p-4 ${
                   isUser 
                     ? "bg-[#A9C9FF] rounded-t-[20px] rounded-bl-[20px] rounded-br-[4px]" 
-                    : "bg-white shadow-sm border border-gray-100 rounded-t-[20px] rounded-br-[20px] rounded-bl-[4px]"
+                    : "bg-card shadow-sm border border-gray-100 rounded-t-[20px] rounded-br-[20px] rounded-bl-[4px]"
                 }`}
               >
                 <Text className={`text-[15px] leading-6 ${isUser ? "text-white" : "text-foreground"}`}>
@@ -636,7 +636,7 @@ export default function ChatScreen() {
 
         {isTyping && (
           <MotiView from={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-row justify-start">
-            <View className="bg-white shadow-sm border border-gray-100 p-4 rounded-t-[20px] rounded-br-[20px] rounded-bl-[4px] flex-row gap-1.5 items-center">
+            <View className="bg-card shadow-sm border border-gray-100 p-4 rounded-t-[20px] rounded-br-[20px] rounded-bl-[4px] flex-row gap-1.5 items-center">
               <MotiView from={{ translateY: 0 }} animate={{ translateY: -5 }} transition={{ loop: true, type: 'timing', duration: 400 }} className="w-2 h-2 rounded-full bg-[#A9C9FF]" />
               <MotiView from={{ translateY: 0 }} animate={{ translateY: -5 }} transition={{ loop: true, type: 'timing', duration: 400, delay: 150 }} className="w-2 h-2 rounded-full bg-[#A9C9FF]" />
               <MotiView from={{ translateY: 0 }} animate={{ translateY: -5 }} transition={{ loop: true, type: 'timing', duration: 400, delay: 300 }} className="w-2 h-2 rounded-full bg-[#A9C9FF]" />
@@ -646,7 +646,7 @@ export default function ChatScreen() {
       </ScrollView>
 
       <View 
-        className="px-6 py-4 bg-white border-t border-gray-100"
+        className="px-6 py-4 bg-card border-t border-gray-100"
         style={{ paddingBottom: insets.bottom > 0 ? insets.bottom + 8 : 16 }}
       >
         {userMessageCount >= MAX_USER_MESSAGES ? (
@@ -694,7 +694,7 @@ export default function ChatScreen() {
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: "spring", stiffness: 200 }}
           >
-            <View className="bg-white rounded-[32px] p-8 items-center w-full max-w-sm" style={{ elevation: 10 }}>
+            <View className="bg-card rounded-[32px] p-8 items-center w-full max-w-sm" style={{ elevation: 10 }}>
               <Pressable 
                 className="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 items-center justify-center"
                 onPress={() => setShowUnlockModal(false)}

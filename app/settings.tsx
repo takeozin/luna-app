@@ -18,11 +18,14 @@ import { LinearGradient } from "expo-linear-gradient";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Alert } from "react-native";
 import { supabase } from "../lib/supabase";
+import { useTheme, ThemeType } from "../lib/themeContext";
 
-const themes = [
+const themes: { id: ThemeType; name: string; color: string; description: string }[] = [
   { id: "calm", name: "Calma", color: "#A9C9FF", description: "Azul serenidade" },
   { id: "focus", name: "Foco", color: "#B8E0D2", description: "Verde menta" },
   { id: "energy", name: "Energia", color: "#FFD9B0", description: "Laranja pêssego" },
+  { id: "oled", name: "Dark Mode", color: "#000000", description: "Preto absoluto para telas OLED" },
+  { id: "system", name: "Sistema", color: "#71717A", description: "Segue as configurações do aparelho" },
 ];
 
 const notificationTimes = [
@@ -32,7 +35,7 @@ const notificationTimes = [
 ];
 
 export default function SettingsScreen() {
-  const [selectedTheme, setSelectedTheme] = useState("calm");
+  const { theme, setTheme, hapticsEnabled, setHapticsEnabled } = useTheme();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [selectedTimes, setSelectedTimes] = useState(["morning", "evening"]);
   
@@ -116,20 +119,19 @@ export default function SettingsScreen() {
 
   return (
     <View className="flex-1 bg-background">
-      <LinearGradient
-        colors={["rgba(214, 204, 254, 0.15)", "rgba(255, 255, 255, 0)"]}
+      <View
         style={{ paddingTop: insets.top + 20, paddingBottom: 24, paddingHorizontal: 24 }}
       >
         <Pressable 
           onPress={() => router.back()} 
           className="flex-row items-center gap-2 mb-4 active:opacity-60"
         >
-          <ArrowLeft size={20} color="#71717A" />
+          <ArrowLeft size={20} color="gray" />
           <Text className="text-muted-foreground font-medium">Voltar</Text>
         </Pressable>
         <Text className="text-3xl font-bold text-foreground mb-1">Configurações</Text>
         <Text className="text-muted-foreground">Personalize sua experiência</Text>
-      </LinearGradient>
+      </View>
 
       <ScrollView 
         contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 40 }}
@@ -157,20 +159,20 @@ export default function SettingsScreen() {
           <Card className="p-4">
             <Text className="text-sm text-muted-foreground mb-4">Escolha a paleta de cores do seu Luna</Text>
             <View className="gap-2">
-              {themes.map((theme) => (
+              {themes.map((themeItem) => (
                 <Pressable
-                  key={theme.id}
-                  onPress={() => setSelectedTheme(theme.id)}
+                  key={themeItem.id}
+                  onPress={() => setTheme(themeItem.id)}
                   className={`flex-row items-center gap-4 p-3 rounded-2xl border-2 transition-all ${
-                    selectedTheme === theme.id ? 'border-[#A9C9FF] bg-[#A9C9FF]/5' : 'border-slate-50'
+                    theme === themeItem.id ? 'border-primary bg-primary/10' : 'border-border'
                   }`}
                 >
-                  <View className="w-8 h-8 rounded-full" style={{ backgroundColor: theme.color }} />
+                  <View className={`w-8 h-8 rounded-full ${themeItem.id === 'oled' ? 'border border-slate-700' : ''}`} style={{ backgroundColor: themeItem.color }} />
                   <View className="flex-1">
-                    <Text className="font-bold text-foreground">{theme.name}</Text>
-                    <Text className="text-xs text-muted-foreground">{theme.description}</Text>
+                    <Text className="font-bold text-foreground">{themeItem.name}</Text>
+                    <Text className="text-xs text-muted-foreground">{themeItem.description}</Text>
                   </View>
-                  {selectedTheme === theme.id && <Text className="text-[#A9C9FF] font-bold text-lg">✓</Text>}
+                  {theme === themeItem.id && <Text className="text-primary font-bold text-lg">✓</Text>}
                 </Pressable>
               ))}
             </View>
@@ -192,7 +194,7 @@ export default function SettingsScreen() {
               <Switch
                 value={notificationsEnabled}
                 onValueChange={setNotificationsEnabled}
-                trackColor={{ false: "#F4F4F5", true: "#B8E0D2" }}
+                trackColor={{ false: "rgba(0,0,0,0.1)", true: "#B8E0D2" }}
                 thumbColor="#FFFFFF"
               />
             </View>
@@ -201,7 +203,7 @@ export default function SettingsScreen() {
               <MotiView 
                 from={{ opacity: 0, height: 0 }} 
                 animate={{ opacity: 1, height: 'auto' }}
-                className="pt-4 border-t border-slate-50 gap-2"
+                className="pt-4 border-t border-border gap-2"
               >
                 <Text className="text-sm text-muted-foreground mb-2">Horários preferidos</Text>
                 {notificationTimes.map((time) => (
@@ -209,7 +211,7 @@ export default function SettingsScreen() {
                     key={time.id}
                     onPress={() => toggleTime(time.id)}
                     className={`flex-row justify-between items-center p-3 rounded-xl border ${
-                      selectedTimes.includes(time.id) ? 'border-[#B8E0D2] bg-[#B8E0D2]/5' : 'border-slate-50'
+                      selectedTimes.includes(time.id) ? 'border-primary bg-primary/5' : 'border-border'
                     }`}
                   >
                     <Text className="font-medium text-foreground">{time.label}</Text>
@@ -221,6 +223,28 @@ export default function SettingsScreen() {
           </Card>
         </View>
 
+        {/* Gamificação / Feedback */}
+        <View className="mb-6">
+          <View className="flex-row items-center gap-2 mb-4 ml-1">
+            <Smartphone size={20} color="#D6CCFE" />
+            <Text className="text-lg font-semibold text-foreground">Sensorial</Text>
+          </View>
+          <Card className="p-4">
+            <View className="flex-row justify-between items-center">
+              <View>
+                <Text className="font-bold text-foreground">Vibrações Hápticas</Text>
+                <Text className="text-xs text-muted-foreground">Sinta o app ao ganhar XP ou completar lições</Text>
+              </View>
+              <Switch
+                value={hapticsEnabled}
+                onValueChange={setHapticsEnabled}
+                trackColor={{ false: "rgba(0,0,0,0.1)", true: "#B8E0D2" }}
+                thumbColor="#FFFFFF"
+              />
+            </View>
+          </Card>
+        </View>
+
         {/* Outras Opções */}
         <View className="mb-6">
           <View className="flex-row items-center gap-2 mb-4 ml-1">
@@ -228,13 +252,13 @@ export default function SettingsScreen() {
             <Text className="text-lg font-semibold text-foreground">Privacidade</Text>
           </View>
           <Card className="p-2 gap-1">
-            <Pressable className="flex-row items-center justify-between p-3 active:bg-slate-50 rounded-xl">
+            <Pressable className="flex-row items-center justify-between p-3 active:bg-muted rounded-xl">
               <Text className="text-foreground font-medium">Termos de Uso</Text>
-              <ChevronRight size={20} color="#E4E4E7" />
+              <ChevronRight size={20} color="gray" />
             </Pressable>
-            <Pressable className="flex-row items-center justify-between p-3 active:bg-slate-50 rounded-xl">
+            <Pressable className="flex-row items-center justify-between p-3 active:bg-muted rounded-xl">
               <Text className="text-foreground font-medium">Política de Privacidade</Text>
-              <ChevronRight size={20} color="#E4E4E7" />
+              <ChevronRight size={20} color="gray" />
             </Pressable>
           </Card>
         </View>
