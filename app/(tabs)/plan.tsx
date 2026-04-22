@@ -204,7 +204,7 @@ export default function MyPlan() {
                         </Pressable>
                         
                         {/* Node Label */}
-                        <View className="mt-2 text-center w-36 bg-card/90 px-3 py-2 rounded-xl shadow-sm border border-border items-center justify-center">
+                        <View className="mt-2 text-center w-36 bg-card/90 px-3 py-2 rounded-xl shadow-sm border items-center justify-center">
                            <Text 
                             numberOfLines={2} 
                             className={`text-xs text-center font-bold leading-tight ${status === 'locked' ? 'text-muted-foreground' : 'text-foreground'}`}

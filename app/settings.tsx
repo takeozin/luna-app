@@ -19,6 +19,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Alert } from "react-native";
 import { supabase } from "../lib/supabase";
 import { useTheme, ThemeType } from "../lib/themeContext";
+import { useBorderColor } from "../lib/useBorderColor";
 
 const themes: { id: ThemeType; name: string; color: string; description: string }[] = [
   { id: "calm", name: "Calma", color: "#A9C9FF", description: "Azul serenidade" },
@@ -41,6 +42,7 @@ export default function SettingsScreen() {
   
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const borderColor = useBorderColor();
   const userName = "Ana";
 
   const toggleTime = (timeId: string) => {
@@ -163,9 +165,10 @@ export default function SettingsScreen() {
                 <Pressable
                   key={themeItem.id}
                   onPress={() => setTheme(themeItem.id)}
-                  className={`flex-row items-center gap-4 p-3 rounded-2xl border-2 transition-all ${
-                    theme === themeItem.id ? 'border-primary bg-primary/10' : 'border-border'
+                  className={`flex-row items-center gap-4 p-3 rounded-2xl transition-all ${
+                    theme === themeItem.id ? 'border-2 border-primary bg-primary/10' : 'border'
                   }`}
+                  style={theme !== themeItem.id ? { borderColor } : undefined}
                 >
                   <View className={`w-8 h-8 rounded-full ${themeItem.id === 'oled' ? 'border border-slate-700' : ''}`} style={{ backgroundColor: themeItem.color }} />
                   <View className="flex-1">
@@ -203,7 +206,8 @@ export default function SettingsScreen() {
               <MotiView 
                 from={{ opacity: 0, height: 0 }} 
                 animate={{ opacity: 1, height: 'auto' }}
-                className="pt-4 border-t border-border gap-2"
+                className="pt-4 border-t gap-2"
+                style={{ borderColor }}
               >
                 <Text className="text-sm text-muted-foreground mb-2">Horários preferidos</Text>
                 {notificationTimes.map((time) => (
@@ -211,8 +215,9 @@ export default function SettingsScreen() {
                     key={time.id}
                     onPress={() => toggleTime(time.id)}
                     className={`flex-row justify-between items-center p-3 rounded-xl border ${
-                      selectedTimes.includes(time.id) ? 'border-primary bg-primary/5' : 'border-border'
+                      selectedTimes.includes(time.id) ? 'border-primary bg-primary/5' : ''
                     }`}
+                    style={!selectedTimes.includes(time.id) ? { borderColor } : undefined}
                   >
                     <Text className="font-medium text-foreground">{time.label}</Text>
                     <Text className="text-sm text-muted-foreground">{time.time}</Text>

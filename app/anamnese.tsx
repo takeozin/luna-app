@@ -230,7 +230,7 @@ export default function Anamnese() {
               </View>
             </View>
           </Card>
-          <Button variant="outline" onPress={() => router.replace("/(tabs)")} className="w-full border-border bg-card">
+          <Button variant="outline" onPress={() => router.replace("/(tabs)")} className="w-full bg-card">
             <Text className="text-foreground font-semibold text-base">Voltar para o Menu</Text>
           </Button>
         </View>
