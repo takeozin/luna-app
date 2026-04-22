@@ -9,6 +9,18 @@ import 'react-native-reanimated';
 import { UnlockProvider } from '../lib/unlockContext';
 import { supabase } from '../lib/supabase';
 import { ThemeProvider, useTheme } from '../lib/themeContext';
+import * as Notifications from 'expo-notifications';
+import { logIncomingNotification } from '../lib/notifications';
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+});
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -41,6 +53,13 @@ export default function RootLayout() {
       }
     };
     initSession();
+
+    // Listener para notificações recebidas (quando o app está no foreground)
+    const subscription = Notifications.addNotificationReceivedListener(notification => {
+      logIncomingNotification(notification);
+    });
+
+    return () => subscription.remove();
   }, []);
 
   return (

@@ -8,6 +8,10 @@ import { Bell, Settings, Quote, Clock, Heart, Sparkles, Flame, Star } from "luci
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useUnlock } from "../../lib/unlockContext";
 import { getLevel } from "../../lib/levels";
+import { getUnreadCount } from "../../lib/notificationLog";
+import { scheduleStreakReminder, cancelStreakReminder } from "../../lib/notifications";
+import { isStreakActiveToday } from "../../lib/streaks";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const dailyQuotes = [
   "Seus pensamentos não são fatos. Eles são apenas hipóteses.",
@@ -31,8 +35,26 @@ export default function Home() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [selectedMood, setSelectedMood] = useState<number | null>(null);
+  const [unreadCount, setUnreadCount] = useState(0);
   const { riskLevel, unlockedCategories, lunaUnlocked, currentXP, streakCount } = useUnlock();
   const levelInfo = getLevel(currentXP);
+
+  useEffect(() => {
+    // Busca número de notificações não lidas
+    getUnreadCount().then(setUnreadCount);
+
+    // Verifica streak para agendar lembrete
+    const checkStreak = async () => {
+      const lastActive = await AsyncStorage.getItem('luna_last_active_date');
+      const activeToday = isStreakActiveToday(lastActive);
+      if (!activeToday) {
+        await scheduleStreakReminder();
+      } else {
+        await cancelStreakReminder();
+      }
+    };
+    checkStreak();
+  }, []);
 
   const handleMoodSelect = async (moodValue: number, emoji: string) => {
     setSelectedMood(moodValue);
@@ -94,6 +116,9 @@ export default function Home() {
               }}
             >
               <Bell size={20} color="#71717A" />
+              {unreadCount > 0 && (
+                <View className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border border-card" />
+              )}
             </Pressable>
             <Pressable
               onPress={() => router.push("/settings")}

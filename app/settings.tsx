@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { View, Text, ScrollView, Pressable, Switch } from "react-native";
 import { useRouter } from "expo-router";
 import { Card } from "../components/Card";
@@ -20,6 +20,8 @@ import { Alert } from "react-native";
 import { supabase } from "../lib/supabase";
 import { useTheme, ThemeType } from "../lib/themeContext";
 import { useBorderColor } from "../lib/useBorderColor";
+import { getNotificationPrefs, saveNotificationPrefs } from "../lib/notificationPrefs";
+import { rescheduleAllNotifications } from "../lib/notifications";
 
 const themes: { id: ThemeType; name: string; color: string; description: string }[] = [
   { id: "calm", name: "Calma", color: "#A9C9FF", description: "Azul serenidade" },
@@ -45,12 +47,32 @@ export default function SettingsScreen() {
   const borderColor = useBorderColor();
   const userName = "Ana";
 
-  const toggleTime = (timeId: string) => {
+  useEffect(() => {
+    getNotificationPrefs().then((prefs) => {
+      setNotificationsEnabled(prefs.enabled);
+      setSelectedTimes(prefs.times);
+    });
+  }, []);
+
+  const handleToggleNotifications = async (val: boolean) => {
+    setNotificationsEnabled(val);
+    const newPrefs = { enabled: val, times: selectedTimes };
+    await saveNotificationPrefs(newPrefs);
+    await rescheduleAllNotifications();
+  };
+
+  const toggleTime = async (timeId: string) => {
+    let newTimes = selectedTimes;
     if (selectedTimes.includes(timeId)) {
-      setSelectedTimes(selectedTimes.filter((t) => t !== timeId));
+      newTimes = selectedTimes.filter((t) => t !== timeId);
     } else {
-      setSelectedTimes([...selectedTimes, timeId]);
+      newTimes = [...selectedTimes, timeId];
     }
+    setSelectedTimes(newTimes);
+    
+    const newPrefs = { enabled: notificationsEnabled, times: newTimes };
+    await saveNotificationPrefs(newPrefs);
+    await rescheduleAllNotifications();
   };
 
   const handleClearChat = async () => {
@@ -196,7 +218,7 @@ export default function SettingsScreen() {
               </View>
               <Switch
                 value={notificationsEnabled}
-                onValueChange={setNotificationsEnabled}
+                onValueChange={handleToggleNotifications}
                 trackColor={{ false: "rgba(0,0,0,0.1)", true: "#B8E0D2" }}
                 thumbColor="#FFFFFF"
               />
