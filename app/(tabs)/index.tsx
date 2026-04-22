@@ -4,10 +4,10 @@ import { useRouter } from "expo-router";
 import { Card } from "../../components/Card";
 import { Button } from "../../components/Button";
 import { MotiView, MotiText } from "moti";
-import { Bell, Settings, Quote, Clock, Heart, Sparkles } from "lucide-react-native";
-import { LinearGradient } from "expo-linear-gradient";
+import { Bell, Settings, Quote, Clock, Heart, Sparkles, Flame, Star } from "lucide-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useUnlock } from "../../lib/unlockContext";
+import { getLevel } from "../../lib/levels";
 
 const dailyQuotes = [
   "Seus pensamentos não são fatos. Eles são apenas hipóteses.",
@@ -31,7 +31,8 @@ export default function Home() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [selectedMood, setSelectedMood] = useState<number | null>(null);
-  const { riskLevel, unlockedCategories, lunaUnlocked } = useUnlock();
+  const { riskLevel, unlockedCategories, lunaUnlocked, currentXP, streakCount } = useUnlock();
+  const levelInfo = getLevel(currentXP);
 
   const handleMoodSelect = async (moodValue: number, emoji: string) => {
     setSelectedMood(moodValue);
@@ -67,19 +68,13 @@ export default function Home() {
   return (
     <View className="flex-1 bg-background">
       {/* Header */}
-      <LinearGradient
-        colors={["rgba(169, 201, 255, 0.2)", "rgba(255, 255, 255, 0)"]}
-        style={{ paddingTop: insets.top + 20, paddingBottom: 24, paddingHorizontal: 24 }}
+      <View
+        style={{ paddingTop: insets.top + 20, paddingBottom: 16, paddingHorizontal: 24 }}
       >
-        <View className="flex-row items-center justify-between mb-2">
+        <View className="flex-row items-center justify-between mb-4">
           <View className="flex-row items-center gap-3">
-            <View className="w-12 h-12 rounded-full overflow-hidden">
-              <LinearGradient
-                colors={["#A9C9FF", "#D6CCFE"]}
-                className="w-full h-full justify-center items-center"
-              >
-                <Text className="text-white text-lg font-semibold">{userName.charAt(0)}</Text>
-              </LinearGradient>
+            <View className="w-12 h-12 rounded-full overflow-hidden bg-primary items-center justify-center">
+              <Text className="text-primary-foreground text-lg font-semibold">{userName.charAt(0)}</Text>
             </View>
             <View>
               <Text className="text-sm text-muted-foreground">{greeting}</Text>
@@ -115,7 +110,31 @@ export default function Home() {
             </Pressable>
           </View>
         </View>
-      </LinearGradient>
+
+        {/* Widget de Status: Nível + Streak */}
+        <MotiView
+          from={{ opacity: 0, translateY: -10 }}
+          animate={{ opacity: 1, translateY: 0 }}
+          transition={{ type: 'timing', duration: 300 }}
+        >
+          <View className="flex-row items-center gap-3">
+            <View className="flex-row items-center gap-1.5 bg-card px-3 py-1.5 rounded-full" style={{ elevation: 1 }}>
+              <Star size={14} color="#8B5CF6" fill="#8B5CF6" />
+              <Text className="text-xs font-bold text-foreground">Nv. {levelInfo.level}</Text>
+              <Text className="text-xs text-muted-foreground">{levelInfo.title}</Text>
+            </View>
+            {streakCount > 0 && (
+              <View className="flex-row items-center gap-1.5 bg-card px-3 py-1.5 rounded-full" style={{ elevation: 1 }}>
+                <Flame size={14} color="#f97316" />
+                <Text className="text-xs font-bold text-foreground">{streakCount} dia{streakCount !== 1 ? 's' : ''}</Text>
+              </View>
+            )}
+            <View className="flex-row items-center gap-1.5 bg-card px-3 py-1.5 rounded-full" style={{ elevation: 1 }}>
+              <Text className="text-xs font-bold text-purple-500">{currentXP} XP</Text>
+            </View>
+          </View>
+        </MotiView>
+      </View>
 
       <ScrollView contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 40, gap: 24 }}>
         {/* Check-in Rápido - funciona sempre */}
@@ -147,11 +166,7 @@ export default function Home() {
 
         {/* Inspiração do Dia - funciona sempre */}
         <MotiView from={{ opacity: 0, translateY: 20 }} animate={{ opacity: 1, translateY: 0 }} transition={{ type: "timing", duration: 400, delay: 200 }}>
-          <Card className="border-0 overflow-hidden" style={{ backgroundColor: "transparent" }}>
-            <LinearGradient
-              colors={["rgba(214, 204, 254, 0.3)", "rgba(169, 201, 255, 0.3)"]}
-              className="absolute inset-0"
-            />
+          <Card className="border border-secondary/30 bg-card shadow-sm">
             <View className="flex-row items-start gap-3">
               <View className="mt-1">
                 <Quote size={24} color="#A9C9FF" />

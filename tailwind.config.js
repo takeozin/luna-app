@@ -17,7 +17,11 @@ module.exports = {
         'primary-foreground': 'var(--primary-foreground)',
         secondary: 'var(--secondary)',
         card: 'var(--card)',
-      }
+        border: 'var(--border)',
+      },
+      borderColor: {
+        DEFAULT: 'var(--border)',
+      },
     },
   },
   plugins: [],

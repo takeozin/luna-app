@@ -6,10 +6,10 @@ import { vars } from 'nativewind';
 export type ThemeType = 'calm' | 'focus' | 'energy' | 'oled' | 'system';
 
 export const rawColors = {
-  calm: { card: '#FFFFFF', border: '#e2e8f0', icon: '#64748b', activeIcon: '#A9C9FF' },
-  focus: { card: '#FFFFFF', border: '#e2e8f0', icon: '#64748b', activeIcon: '#4a8a76' },
-  energy: { card: '#FFFFFF', border: '#e2e8f0', icon: '#64748b', activeIcon: '#d48c3d' },
-  oled: { card: '#2B2D31', border: '#1E1F22', icon: '#949BA4', activeIcon: '#F2F3F5' }
+  calm: { card: '#FFFFFF', border: '#D6E4F5', icon: '#64748b', activeIcon: '#A9C9FF' },
+  focus: { card: '#FFFFFF', border: '#D1E8DE', icon: '#64748b', activeIcon: '#4a8a76' },
+  energy: { card: '#FFFFFF', border: '#F0DCC8', icon: '#64748b', activeIcon: '#d48c3d' },
+  oled: { card: '#2B2D31', border: '#404249', icon: '#949BA4', activeIcon: '#F2F3F5' }
 };
 
 interface ThemeContextType {

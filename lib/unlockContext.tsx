@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { loadStreak, updateStreak, StreakData } from './streaks';
 
 // === Mapeamento Científico SRQ-20 → Categorias do App ===
 // Baseado na análise fatorial de Iacoponi & Mari (1989)
@@ -55,11 +56,13 @@ interface UnlockContextType {
   lunaUnlocked: number[];
   currentXP: number;
   completedModules: string[];
+  streakCount: number;
   isLocked: (categoryId: number) => boolean;
   setRiskAndUnlock: (score: number, answers: Record<number, number>, isQ17: boolean) => Promise<void>;
   unlockCategory: (categoryIds: number[]) => Promise<void>;
   addXP: (amount: number) => Promise<void>;
   markModuleComplete: (moduleId: string) => Promise<void>;
+  refreshStreak: () => Promise<void>;
   isLoading: boolean;
 }
 
@@ -69,11 +72,13 @@ const UnlockContext = createContext<UnlockContextType>({
   lunaUnlocked: [],
   currentXP: 0,
   completedModules: [],
+  streakCount: 0,
   isLocked: () => true,
   setRiskAndUnlock: async () => {},
   unlockCategory: async () => {},
   addXP: async () => {},
   markModuleComplete: async () => {},
+  refreshStreak: async () => {},
   isLoading: true,
 });
 
@@ -110,8 +115,18 @@ export function UnlockProvider({ children }: { children: React.ReactNode }) {
   const [lunaUnlocked, setLunaUnlocked] = useState<number[]>([]);
   const [currentXP, setCurrentXP] = useState<number>(0);
   const [completedModules, setCompletedModules] = useState<string[]>([]);
+  const [streakCount, setStreakCount] = useState<number>(0);
+  const [streakData, setStreakData] = useState<StreakData>({ count: 0, lastActiveDate: null });
   const [isLoading, setIsLoading] = useState(true);
   const { hapticsEnabled } = useTheme();
+
+  // Carrega e atualiza a streak (chamado na inicialização e ao completar módulo)
+  const refreshStreak = useCallback(async () => {
+    const current = await loadStreak();
+    const updated = await updateStreak(current);
+    setStreakData(updated);
+    setStreakCount(updated.count);
+  }, []);
 
   // HELPER: Sincroniza perfil completo com Supabase
   const syncProfileToSupabase = useCallback(async (
@@ -236,11 +251,13 @@ export function UnlockProvider({ children }: { children: React.ReactNode }) {
       } catch (error) {
         console.error('[UnlockContext] Erro ao carregar estado:', error);
       } finally {
+        // Carrega streak independentemente do Supabase
+        await refreshStreak();
         setIsLoading(false);
       }
     };
     loadState();
-  }, [syncProfileToSupabase]);
+  }, [syncProfileToSupabase, refreshStreak]);
 
   const isLocked = useCallback((categoryId: number): boolean => {
     if (riskLevel === 'none') return true;
@@ -324,6 +341,9 @@ export function UnlockProvider({ children }: { children: React.ReactNode }) {
     const updated = [...completedModules, moduleId];
     setCompletedModules(updated);
 
+    // Atualiza streak ao completar um módulo
+    await refreshStreak();
+
     // Salva local
     await AsyncStorage.setItem(STORAGE_KEYS.COMPLETED_MODULES, JSON.stringify(updated));
 
@@ -340,7 +360,7 @@ export function UnlockProvider({ children }: { children: React.ReactNode }) {
     } catch (err) {
       console.error('[UnlockContext] Erro ao sincronizar módulos:', err);
     }
-  }, [completedModules]);
+  }, [completedModules, refreshStreak]);
 
   return (
     <UnlockContext.Provider value={{
@@ -349,11 +369,13 @@ export function UnlockProvider({ children }: { children: React.ReactNode }) {
       lunaUnlocked,
       currentXP,
       completedModules,
+      streakCount,
       isLocked,
       setRiskAndUnlock,
       unlockCategory,
       addXP,
       markModuleComplete,
+      refreshStreak,
       isLoading,
     }}>
       {children}

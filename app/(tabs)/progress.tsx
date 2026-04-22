@@ -1,72 +1,46 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { View, Text, ScrollView, Pressable, Modal } from "react-native";
 import { Card } from "../../components/Card";
 import { MotiView } from "moti";
 import { Trophy, Target, Flame, TrendingUp, Sparkles, Check, Star, Lock, X, ChevronRight } from "lucide-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect } from "expo-router";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useUnlock } from "../../lib/unlockContext";
 import { useAchievements } from "../../lib/useAchievements";
+import { getLevel } from "../../lib/levels";
+import { fetchWeeklyMood, calculateMoodTrend, MoodEntry } from "../../lib/mood";
 
-// Calcula o nível do usuário com base no XP
-function getLevel(xp: number) {
-  const levels = [
-    { threshold: 0,    title: 'Iniciante' },
-    { threshold: 300,  title: 'Aprendiz' },
-    { threshold: 800,  title: 'Praticante' },
-    { threshold: 1500, title: 'Avançado' },
-    { threshold: 2500, title: 'Especialista' },
-    { threshold: 4000, title: 'Mestre' },
-    { threshold: 6000, title: 'Lenda' },
-  ];
+// (Função getLevel agora vive em lib/levels.ts)
 
-  let currentLevel = 0;
-  for (let i = levels.length - 1; i >= 0; i--) {
-    if (xp >= levels[i].threshold) {
-      currentLevel = i;
-      break;
-    }
-  }
-
-  const nextLevel = currentLevel < levels.length - 1 ? levels[currentLevel + 1] : null;
-  const xpForNext = nextLevel ? nextLevel.threshold - levels[currentLevel].threshold : 0;
-  const xpInLevel = xp - levels[currentLevel].threshold;
-
-  return {
-    level: currentLevel + 1,
-    title: levels[currentLevel].title,
-    xpForNext,
-    xpInLevel,
-  };
-}
-
-// Dados de humor zerados por padrão — será preenchido com dados reais do Supabase na Fase 3
-const defaultMoodData = [
-  { day: "Seg", mood: 0 },
-  { day: "Ter", mood: 0 },
-  { day: "Qua", mood: 0 },
-  { day: "Qui", mood: 0 },
-  { day: "Sex", mood: 0 },
-  { day: "Sáb", mood: 0 },
-  { day: "Dom", mood: 0 },
-];
+// (Dados de humor agora vêm do Supabase via fetchWeeklyMood)
 
 export default function ProgressScreen() {
   const insets = useSafeAreaInsets();
-  const { currentXP } = useUnlock();
+  const { currentXP, streakCount } = useUnlock();
   const { achievements, unlockedCount, totalCount, completedModules, isLoading } = useAchievements();
   const [showAllAchievements, setShowAllAchievements] = useState(false);
+  const [moodData, setMoodData] = useState<MoodEntry[]>([]);
+  const [moodTrend, setMoodTrend] = useState('—');
 
   const levelInfo = getLevel(currentXP);
   const levelProgress = levelInfo.xpForNext > 0 ? (levelInfo.xpInLevel / levelInfo.xpForNext) * 100 : 100;
 
-  // Tudo começa zerado — sem dados fake de teste
+  // Carrega dados de humor reais do Supabase ao focar na tela
+  useFocusEffect(
+    useCallback(() => {
+      const loadMood = async () => {
+        const entries = await fetchWeeklyMood();
+        setMoodData(entries);
+        setMoodTrend(calculateMoodTrend(entries));
+      };
+      loadMood();
+    }, [])
+  );
+
   const stats = [
-    { label: "Dias consecutivos", value: "0", icon: <Flame size={24} color="#f97316" />, color: "#ffedd5" },
+    { label: "Dias consecutivos", value: `${streakCount}`, icon: <Flame size={24} color="#f97316" />, color: "#ffedd5" },
     { label: "Exercícios completos", value: `${completedModules.length}`, icon: <Target size={24} color="#A9C9FF" />, color: "#dbeafe" },
-    { label: "Melhora no humor", value: "—", icon: <TrendingUp size={24} color="#B8E0D2" />, color: "#d1fae5" },
+    { label: "Melhora no humor", value: moodTrend, icon: <TrendingUp size={24} color="#B8E0D2" />, color: "#d1fae5" },
   ];
 
   return (
@@ -76,15 +50,14 @@ export default function ProgressScreen() {
         contentContainerStyle={{ paddingBottom: 100 }}
       >
         {/* Header */}
-        <LinearGradient 
-          colors={['rgba(184, 224, 210, 0.3)', 'transparent']}
+        <View
           style={{ paddingTop: insets.top + 24, paddingBottom: 24, paddingHorizontal: 24 }}
         >
-          <Text className="text-3xl font-bold mb-2">Meu Progresso</Text>
+          <Text className="text-3xl font-bold mb-2 text-foreground">Meu Progresso</Text>
           <Text className="text-muted-foreground text-base">
             Acompanhe sua jornada de autoconhecimento
           </Text>
-        </LinearGradient>
+        </View>
 
         <View className="px-5 space-y-6">
 
@@ -165,11 +138,11 @@ export default function ProgressScreen() {
               <Text className="text-lg font-bold mb-6 text-foreground">Evolução do Humor (7 dias)</Text>
               
               <View className="h-40 flex-row items-end justify-between px-2">
-                {defaultMoodData.map((data, index) => {
+                {moodData.length > 0 ? moodData.map((data, index) => {
                   const heightPercentage = (data.mood / 5) * 100;
                   return (
                     <View key={index} className="items-center gap-2">
-                      <View className="w-8 h-full justify-end bg-gray-50 rounded-full overflow-hidden">
+                      <View className="w-8 h-full justify-end bg-muted rounded-full overflow-hidden">
                         <MotiView
                           from={{ height: 0 }}
                           animate={{ height: `${heightPercentage}%` }}
@@ -183,7 +156,11 @@ export default function ProgressScreen() {
                       <Text className="text-xs font-semibold text-muted-foreground">{data.day}</Text>
                     </View>
                   );
-                })}
+                }) : (
+                  <View className="flex-1 items-center justify-center">
+                    <Text className="text-sm text-muted-foreground">Sem dados de humor ainda</Text>
+                  </View>
+                )}
               </View>
 
               <View className="mt-6 pt-4 border-t border-gray-100 items-center">

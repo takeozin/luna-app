@@ -12,6 +12,7 @@
     --primary-foreground: #FFFFFF;
     --secondary: #A9C9FF; /* Base Calm config */
     --card: #FFFFFF;
+    --border: #E4E4E7;
   }
 
   .theme-calm {
@@ -23,6 +24,7 @@
     --primary-foreground: #FFFFFF;
     --secondary: #A9C9FF;
     --card: #FFFFFF;
+    --border: #D6E4F5;
   }
 
   .theme-focus {
@@ -34,6 +36,7 @@
     --primary-foreground: #FFFFFF;
     --secondary: #B8E0D2;
     --card: #FFFFFF;
+    --border: #D1E8DE;
   }
 
   .theme-energy {
@@ -45,6 +48,7 @@
     --primary-foreground: #FFFFFF;
     --secondary: #FFD9B0;
     --card: #FFFFFF;
+    --border: #F0DCC8;
   }
 
   .theme-oled {
@@ -56,6 +60,7 @@
     --primary-foreground: #FFFFFF;
     --secondary: #1E1F22;
     --card: #2B2D31;
+    --border: #35373C;
   }
 }
 
