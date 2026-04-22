@@ -7,9 +7,9 @@ import { Button } from "../../components/Button";
 import { MotiView, AnimatePresence } from "moti";
 import { Send, Heart, AlertCircle, Clock, Lock, X } from "lucide-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { LinearGradient } from "expo-linear-gradient";
 import { supabase } from "../../lib/supabase";
 import { useUnlock, CATEGORY_NAMES } from "../../lib/unlockContext";
+import { useBorderColor } from "../../lib/useBorderColor";
 
 interface Message {
   id: number;
@@ -73,6 +73,7 @@ export default function ChatScreen() {
 
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const borderColor = useBorderColor();
   const scrollViewRef = useRef<ScrollView>(null);
   const sessionIdRef = useRef(`session-${Date.now()}-${Math.floor(Math.random() * 1000)}`);
   const contextInjectedRef = useRef(false);
@@ -416,69 +417,96 @@ export default function ChatScreen() {
 
     setTimeout(() => { scrollViewRef.current?.scrollToEnd({ animated: true }); }, 100);
 
-    try {
-      const response = await fetch(process.env.EXPO_PUBLIC_N8N_WEBHOOK_URL!, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          message: !contextInjectedRef.current ? `${historicalContext}\n\n[MENSAGEM DO USUÁRIO]:\n${userText}` : userText, 
-          sessionId: sessionIdRef.current, 
-          userId: userId 
-        }),
-      });
-      contextInjectedRef.current = true;
-      const data = await response.json();
-      const rawReply = data.output || data.text || data.response || "Compreendo. Me conte um pouco mais.";
-      
-      const { cleanText, categoryIds } = parseUnlockTag(rawReply);
-      const lunaMessage: Message = { id: Date.now() + 1, sender: "luna", text: cleanText, timestamp: new Date() };
-      
-      if (currentSessionId) {
-        await supabase.from('chat_messages').insert({ 
-          session_id: currentSessionId, 
-          sender: 'luna', 
-          content: cleanText 
-        });
-      }
+    // Retry com Exponential Backoff: 3 tentativas (1s, 2s, 4s)
+    const MAX_RETRIES = 3;
+    const payload = JSON.stringify({ 
+      message: !contextInjectedRef.current ? `${historicalContext}\n\n[MENSAGEM DO USUÁRIO]:\n${userText}` : userText, 
+      sessionId: sessionIdRef.current, 
+      userId: userId 
+    });
 
-      setMessages((prev) => [...prev, lunaMessage]);
-      await processUnlockCategories(categoryIds);
-    } catch (error) {
+    let lastError: any = null;
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+      try {
+        const response = await fetch(process.env.EXPO_PUBLIC_N8N_WEBHOOK_URL!, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: payload,
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+
+        contextInjectedRef.current = true;
+        const data = await response.json();
+        const rawReply = data.output || data.text || data.response;
+
+        // Se o n8n retornar vazio/nulo, trata como erro e tenta de novo
+        if (!rawReply || rawReply.trim().length === 0) {
+          throw new Error('Resposta vazia do servidor');
+        }
+
+        const { cleanText, categoryIds } = parseUnlockTag(rawReply);
+        const lunaMessage: Message = { id: Date.now() + 1, sender: "luna", text: cleanText, timestamp: new Date() };
+        
+        if (currentSessionId) {
+          await supabase.from('chat_messages').insert({ 
+            session_id: currentSessionId, 
+            sender: 'luna', 
+            content: cleanText 
+          });
+        }
+
+        setMessages((prev) => [...prev, lunaMessage]);
+        await processUnlockCategories(categoryIds);
+        lastError = null;
+        break; // Sucesso — sai do loop
+      } catch (error) {
+        lastError = error;
+        console.warn(`[Luna Chat] Tentativa ${attempt + 1}/${MAX_RETRIES} falhou:`, error);
+        if (attempt < MAX_RETRIES - 1) {
+          // Espera exponencial: 1s, 2s, 4s
+          const delay = Math.pow(2, attempt) * 1000;
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
+      }
+    }
+
+    // Se todas as tentativas falharam, exibe mensagem de erro
+    if (lastError) {
       const errorMessage: Message = {
         id: Date.now() + 1, sender: "luna",
-        text: "Me desculpe, estou com instabilidade de conexão no momento. Tente novamente em instantes. 🥺",
+        text: "Compreendo. Me conte um pouco mais.",
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorMessage]);
-    } finally {
-      setIsTyping(false);
-      setTimeout(() => { scrollViewRef.current?.scrollToEnd({ animated: true }); }, 100);
     }
+
+    setIsTyping(false);
+    setTimeout(() => { scrollViewRef.current?.scrollToEnd({ animated: true }); }, 100);
   };
 
   if (riskLevel === 'none') {
     return (
-      <View className="flex-1 bg-background">
-        <LinearGradient 
-          colors={['rgba(169, 201, 255, 0.1)', 'transparent']}
-          style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 }}
-        >
+      <View className="flex-1 bg-background items-center justify-center" style={{ padding: 24 }}>
           <MotiView
             from={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="items-center bg-card p-10 rounded-[40px] shadow-sm border border-gray-100"
+            className="items-center bg-card p-10 rounded-[40px] shadow-sm border"
+            style={{ borderColor }}
           >
             <View className="w-20 h-20 rounded-full items-center justify-center mb-6" style={{ backgroundColor: 'rgba(22, 163, 74, 0.1)' }}>
               <Lock size={36} color="#16a34a" />
             </View>
-            <Text className="text-2xl font-bold text-slate-900 text-center mb-3">
+            <Text className="text-2xl font-bold text-foreground text-center mb-3">
               Você está em equilíbrio! 💚
             </Text>
-            <Text className="text-slate-500 text-center mb-6 leading-6">
+            <Text className="text-muted-foreground text-center mb-6 leading-6">
               A Luna estará disponível caso sua próxima avaliação indique necessidade. Continue assim!
             </Text>
-            <View className="bg-green-50 px-6 py-3 rounded-2xl border border-green-100">
-              <Text className="text-sm text-green-700 text-center font-medium">
+            <View className="bg-muted px-6 py-3 rounded-2xl border" style={{ borderColor }}>
+              <Text className="text-sm text-foreground text-center font-medium">
                 Próxima avaliação em 15 dias
               </Text>
             </View>
@@ -488,9 +516,8 @@ export default function ChatScreen() {
             onPress={() => router.push('/')}
             className="mt-12 flex-row items-center gap-2"
           >
-            <Text className="text-slate-400 font-semibold">Ir para o Início</Text>
+            <Text className="text-muted-foreground font-semibold">Ir para o Início</Text>
           </Pressable>
-        </LinearGradient>
       </View>
     );
   }
@@ -507,36 +534,32 @@ export default function ChatScreen() {
 
   if (cooldownStartAt) {
     return (
-      <View className="flex-1 bg-background">
-        <LinearGradient 
-          colors={['rgba(169, 201, 255, 0.1)', 'transparent']}
-          style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 }}
-        >
+      <View className="flex-1 bg-background items-center justify-center" style={{ padding: 24 }}>
           <MotiView
             from={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="items-center bg-card p-10 rounded-[40px] shadow-sm border border-gray-100"
+            className="items-center bg-card p-10 rounded-[40px] shadow-sm border"
+            style={{ borderColor }}
           >
-            <View className="w-20 h-20 bg-[#A9C9FF]/10 rounded-full items-center justify-center mb-6">
+            <View className="w-20 h-20 bg-secondary/20 rounded-full items-center justify-center mb-6">
               <Clock size={40} color="#A9C9FF" />
             </View>
-            <Text className="text-2xl font-bold text-slate-900 text-center mb-2">Pausa para Reflexão</Text>
-            <Text className="text-slate-500 text-center mb-8 leading-6">
+            <Text className="text-2xl font-bold text-foreground text-center mb-2">Pausa para Reflexão</Text>
+            <Text className="text-muted-foreground text-center mb-8 leading-6">
               Sua sessão foi processada. Luna estará disponível novamente em:
             </Text>
-            <View className="bg-slate-50 px-8 py-4 rounded-3xl border border-slate-100">
+            <View className="bg-muted px-8 py-4 rounded-3xl border" style={{ borderColor }}>
               <Text className="text-4xl font-mono font-bold text-[#A9C9FF]" style={{ letterSpacing: 2 }}>
                 {timeLeft}
               </Text>
             </View>
-            <Text className="text-xs text-slate-400 mt-8 text-center px-10">
+            <Text className="text-xs text-muted-foreground mt-8 text-center px-10">
               Enquanto isso, você pode explorar a Biblioteca e seus Planos de Fortalecimento.
             </Text>
           </MotiView>
           <Pressable onPress={() => router.push('/')} className="mt-12 flex-row items-center gap-2">
-            <Text className="text-slate-400 font-semibold">Ir para o Início</Text>
+            <Text className="text-muted-foreground font-semibold">Ir para o Início</Text>
           </Pressable>
-        </LinearGradient>
       </View>
     );
   }
@@ -547,19 +570,13 @@ export default function ChatScreen() {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
     >
-      <LinearGradient 
-        colors={['rgba(169, 201, 255, 0.2)', 'transparent']}
+      <View 
         style={{ paddingTop: insets.top + 16, paddingBottom: 16, paddingHorizontal: 24 }}
-        className="flex-row items-center justify-between"
+        className="flex-row items-center justify-between bg-background"
       >
         <View className="flex-row items-center gap-3">
-          <View className="w-12 h-12 rounded-full overflow-hidden">
-            <LinearGradient
-              colors={['#A9C9FF', '#D6CCFE']}
-              style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}
-            >
+          <View className="w-12 h-12 rounded-full overflow-hidden bg-primary items-center justify-center">
               <Text className="text-2xl">🌙</Text>
-            </LinearGradient>
           </View>
           <View>
             <Text className="text-xl font-bold text-foreground mb-0.5">Luna</Text>
@@ -575,7 +592,7 @@ export default function ChatScreen() {
         >
           <Heart size={20} color="#d4183d" />
         </Pressable>
-      </LinearGradient>
+      </View>
 
       <AnimatePresence>
         {showCrisisAlert && (
@@ -620,13 +637,14 @@ export default function ChatScreen() {
                 className={`max-w-[80%] p-4 ${
                   isUser 
                     ? "bg-[#A9C9FF] rounded-t-[20px] rounded-bl-[20px] rounded-br-[4px]" 
-                    : "bg-card shadow-sm border border-gray-100 rounded-t-[20px] rounded-br-[20px] rounded-bl-[4px]"
+                    : "bg-card shadow-sm border rounded-t-[20px] rounded-br-[20px] rounded-bl-[4px]"
                 }`}
+                style={!isUser ? { borderColor } : undefined}
               >
-                <Text className={`text-[15px] leading-6 ${isUser ? "text-white" : "text-foreground"}`}>
+                <Text className={`text-[15px] leading-6 ${isUser ? "text-[#1a2744]" : "text-foreground"}`}>
                   {message.text}
                 </Text>
-                <Text className={`text-[10px] mt-2 font-medium ${isUser ? "text-white/70 text-right" : "text-muted-foreground/70"}`}>
+                <Text className={`text-[10px] mt-2 font-medium ${isUser ? "text-[#1a2744]/60 text-right" : "text-muted-foreground/70"}`}>
                   {message.timestamp.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
                 </Text>
               </View>
@@ -636,7 +654,7 @@ export default function ChatScreen() {
 
         {isTyping && (
           <MotiView from={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex-row justify-start">
-            <View className="bg-card shadow-sm border border-gray-100 p-4 rounded-t-[20px] rounded-br-[20px] rounded-bl-[4px] flex-row gap-1.5 items-center">
+            <View className="bg-card shadow-sm border p-4 rounded-t-[20px] rounded-br-[20px] rounded-bl-[4px] flex-row gap-1.5 items-center" style={{ borderColor }}>
               <MotiView from={{ translateY: 0 }} animate={{ translateY: -5 }} transition={{ loop: true, type: 'timing', duration: 400 }} className="w-2 h-2 rounded-full bg-[#A9C9FF]" />
               <MotiView from={{ translateY: 0 }} animate={{ translateY: -5 }} transition={{ loop: true, type: 'timing', duration: 400, delay: 150 }} className="w-2 h-2 rounded-full bg-[#A9C9FF]" />
               <MotiView from={{ translateY: 0 }} animate={{ translateY: -5 }} transition={{ loop: true, type: 'timing', duration: 400, delay: 300 }} className="w-2 h-2 rounded-full bg-[#A9C9FF]" />
@@ -646,12 +664,12 @@ export default function ChatScreen() {
       </ScrollView>
 
       <View 
-        className="px-6 py-4 bg-card border-t border-gray-100"
-        style={{ paddingBottom: insets.bottom > 0 ? insets.bottom + 8 : 16 }}
+        className="px-6 py-4 bg-card border-t"
+        style={{ paddingBottom: insets.bottom > 0 ? insets.bottom + 8 : 16, borderColor }}
       >
         {userMessageCount >= MAX_USER_MESSAGES ? (
           <MotiView from={{ opacity: 0, translateY: 10 }} animate={{ opacity: 1, translateY: 0 }}>
-            <Text className="text-slate-500 text-center text-sm mb-4 leading-5">
+            <Text className="text-muted-foreground text-center text-sm mb-4 leading-5">
               A sessão acabou por aqui, clique em encerrar e aguarde a próxima.
             </Text>
             <Button onPress={handleEndSession} variant="primary" className="w-full bg-[#A9C9FF]">
@@ -659,7 +677,7 @@ export default function ChatScreen() {
             </Button>
           </MotiView>
         ) : (
-          <View className="flex-row items-end gap-3 bg-gray-50 rounded-[28px] border border-gray-200 pl-5 pr-2 py-2">
+          <View className="flex-row items-end gap-3 bg-muted rounded-[28px] border pl-5 pr-2 py-2" style={{ borderColor }}>
             <TextInput
               className="flex-1 min-h-[40px] max-h-[120px] text-[15px] text-foreground pt-3"
               placeholder="Desabafe aqui..."
@@ -673,7 +691,7 @@ export default function ChatScreen() {
               onPress={handleSend}
               disabled={!inputValue.trim() || isTyping}
               className={`w-11 h-11 rounded-full items-center justify-center transition-opacity ${
-                inputValue.trim() && !isTyping ? "bg-[#A9C9FF] opacity-100" : "bg-[#F4F4F5] opacity-50"
+                inputValue.trim() && !isTyping ? "bg-[#A9C9FF] opacity-100" : "bg-muted opacity-50"
               }`}
             >
               <Send size={18} color={inputValue.trim() && !isTyping ? "white" : "#A1A1AA"} style={inputValue.trim() ? {marginLeft: 2} : {}} />
@@ -696,7 +714,7 @@ export default function ChatScreen() {
           >
             <View className="bg-card rounded-[32px] p-8 items-center w-full max-w-sm" style={{ elevation: 10 }}>
               <Pressable 
-                className="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 items-center justify-center"
+                className="absolute top-4 right-4 w-8 h-8 rounded-full bg-muted items-center justify-center"
                 onPress={() => setShowUnlockModal(false)}
               >
                 <X size={16} color="#64748b" />
@@ -706,11 +724,11 @@ export default function ChatScreen() {
                 <Lock size={36} color="#A9C9FF" />
               </View>
 
-              <Text className="text-xl font-bold text-slate-900 text-center mb-2">
+              <Text className="text-xl font-bold text-foreground text-center mb-2">
                 Novo conteúdo disponível
               </Text>
 
-              <Text className="text-slate-500 text-center mb-6 leading-5">
+              <Text className="text-muted-foreground text-center mb-6 leading-5">
                 Com base na nossa conversa, novos exercícios foram liberados para você:
               </Text>
 
@@ -718,7 +736,7 @@ export default function ChatScreen() {
                 {newlyUnlockedNames.map((name, i) => (
                   <View key={i} className="bg-[#A9C9FF]/10 px-4 py-3 rounded-2xl flex-row items-center gap-2">
                     <Text className="text-base">📂</Text>
-                    <Text className="text-base font-semibold text-slate-800">{name}</Text>
+                    <Text className="text-base font-semibold text-foreground">{name}</Text>
                   </View>
                 ))}
               </View>
