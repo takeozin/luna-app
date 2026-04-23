@@ -37,15 +37,17 @@ const DAILY_QUOTES = [
   "Cultive a mente sábia: o equilíbrio entre a razão e a emoção."
 ];
 
-function getQuoteForToday(): string {
-  // Sorteia uma frase baseada no dia do ano
+function getQuoteForPeriod(periodOffset: number = 0): string {
+  // Cada período do dia (manhã=0, tarde=1, noite=2) recebe uma frase diferente
   const now = new Date();
   const start = new Date(now.getFullYear(), 0, 0);
   const diff = now.getTime() - start.getTime();
   const oneDay = 1000 * 60 * 60 * 24;
   const dayOfYear = Math.floor(diff / oneDay);
   
-  return DAILY_QUOTES[dayOfYear % DAILY_QUOTES.length];
+  // Multiplica pelo dia e soma o offset do período para nunca repetir no mesmo dia
+  const index = (dayOfYear * 3 + periodOffset) % DAILY_QUOTES.length;
+  return DAILY_QUOTES[index];
 }
 
 export async function requestNotificationPermissions(): Promise<boolean> {
@@ -84,13 +86,16 @@ export async function rescheduleAllNotifications() {
   if (!hasPermission) return;
 
   // Agenda Lembretes Diários
+  const PERIOD_OFFSET: Record<string, number> = { morning: 0, afternoon: 1, evening: 2 };
+  
   for (const timeKey of prefs.times) {
     const timeInfo = TIME_MAP[timeKey];
     if (timeInfo) {
+      const offset = PERIOD_OFFSET[timeKey] ?? 0;
       await Notifications.scheduleNotificationAsync({
         content: {
           title: "Inspiração do Dia 🌱",
-          body: getQuoteForToday(),
+          body: getQuoteForPeriod(offset),
           data: { type: 'quote' },
         },
         trigger: {
