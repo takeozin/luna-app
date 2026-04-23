@@ -11,13 +11,13 @@ export interface LevelInfo {
 }
 
 const LEVELS = [
-  { threshold: 0,    title: 'Iniciante' },
-  { threshold: 300,  title: 'Aprendiz' },
-  { threshold: 800,  title: 'Praticante' },
-  { threshold: 1500, title: 'Avançado' },
-  { threshold: 2500, title: 'Especialista' },
-  { threshold: 4000, title: 'Mestre' },
-  { threshold: 6000, title: 'Lenda' },
+  { threshold: 0,    title: 'Explorador da Mente' },
+  { threshold: 300,  title: 'Detetive dos Pensamentos' },
+  { threshold: 800,  title: 'Curador Emocional' },
+  { threshold: 1500, title: 'Arquiteto da Paz' },
+  { threshold: 2500, title: 'Mestre da Resiliência' },
+  { threshold: 4000, title: 'Sábio Interior' },
+  { threshold: 6000, title: 'Guardião da Serenidade' },
 ];
 
 /**

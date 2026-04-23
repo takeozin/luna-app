@@ -136,26 +136,59 @@ export default function Home() {
           </View>
         </View>
 
-        {/* Widget de Status: Nível + Streak */}
+        {/* Widget de Status: Nível + Streak + XP Progress */}
         <MotiView
           from={{ opacity: 0, translateY: -10 }}
           animate={{ opacity: 1, translateY: 0 }}
           transition={{ type: 'timing', duration: 300 }}
         >
-          <View className="flex-row items-center gap-3">
-            <View className="flex-row items-center gap-1.5 bg-card px-3 py-1.5 rounded-full" style={{ elevation: 1 }}>
-              <Star size={14} color="#8B5CF6" fill="#8B5CF6" />
-              <Text className="text-xs font-bold text-foreground">Nv. {levelInfo.level}</Text>
-              <Text className="text-xs text-muted-foreground">{levelInfo.title}</Text>
-            </View>
-            {streakCount > 0 && (
-              <View className="flex-row items-center gap-1.5 bg-card px-3 py-1.5 rounded-full" style={{ elevation: 1 }}>
-                <Flame size={14} color="#f97316" />
-                <Text className="text-xs font-bold text-foreground">{streakCount} dia{streakCount !== 1 ? 's' : ''}</Text>
+          <View className="bg-card p-4 rounded-2xl mt-1 shadow-sm border border-secondary/10">
+            <View className="flex-row justify-between items-center mb-3">
+              <View className="flex-row items-center gap-3">
+                <View className="bg-purple-100 p-2 rounded-full">
+                  <Star size={18} color="#8B5CF6" fill="#8B5CF6" />
+                </View>
+                <View>
+                  <Text className="text-xs text-muted-foreground font-semibold">Nível {levelInfo.level}</Text>
+                  <Text className="text-sm font-bold text-foreground">{levelInfo.title}</Text>
+                </View>
               </View>
-            )}
-            <View className="flex-row items-center gap-1.5 bg-card px-3 py-1.5 rounded-full" style={{ elevation: 1 }}>
-              <Text className="text-xs font-bold text-purple-500">{currentXP} XP</Text>
+              
+              <View className="items-end">
+                {streakCount > 0 ? (
+                  <MotiView 
+                    from={{ scale: 0.95 }} 
+                    animate={{ scale: 1 }} 
+                    transition={{ type: 'spring', loop: true, delay: 2000 }}
+                    className="flex-row items-center gap-1.5 bg-orange-50 px-3 py-1.5 rounded-full border border-orange-100"
+                  >
+                    <Flame size={16} color="#f97316" fill="#f97316" />
+                    <Text className="text-xs font-bold text-orange-600">{streakCount} dia{streakCount !== 1 ? 's' : ''}</Text>
+                  </MotiView>
+                ) : (
+                  <View className="bg-muted px-3 py-1 rounded-full">
+                    <Text className="text-xs font-bold text-muted-foreground">{currentXP} XP Total</Text>
+                  </View>
+                )}
+              </View>
+            </View>
+            
+            {/* Progress Bar */}
+            <View className="h-2.5 bg-muted rounded-full overflow-hidden mb-1.5">
+              <MotiView 
+                from={{ width: 0 }}
+                animate={{ width: `${levelInfo.xpForNext > 0 ? (levelInfo.xpInLevel / levelInfo.xpForNext) * 100 : 100}%` }}
+                transition={{ type: 'spring', damping: 15, delay: 300 }}
+                className="h-full bg-purple-500 rounded-full"
+              />
+            </View>
+            <View className="flex-row justify-between">
+              <Text className="text-[10px] text-muted-foreground font-medium">{levelInfo.xpInLevel} XP</Text>
+              {levelInfo.xpForNext > 0 ? (
+                <Text className="text-[10px] text-muted-foreground font-medium">Próximo: {levelInfo.xpForNext} XP</Text>
+              ) : (
+                <Text className="text-[10px] text-purple-500 font-bold">Nível Máximo!</Text>
+              )}
             </View>
           </View>
         </MotiView>
