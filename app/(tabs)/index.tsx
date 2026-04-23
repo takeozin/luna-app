@@ -31,9 +31,12 @@ const moods = [
 
 import { supabase } from "../../lib/supabase";
 
+import { useAuth } from "../../lib/authContext";
+
 export default function Home() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { user } = useAuth();
   const [selectedMood, setSelectedMood] = useState<number | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
   const { riskLevel, unlockedCategories, lunaUnlocked, currentXP, streakCount } = useUnlock();
@@ -41,16 +44,22 @@ export default function Home() {
 
   useEffect(() => {
     // Busca número de notificações não lidas
-    getUnreadCount().then(setUnreadCount);
+    getUnreadCount()
+      .then(setUnreadCount)
+      .catch((err) => console.warn('[Home] Erro ao buscar contagem não lida:', err));
 
     // Verifica streak para agendar lembrete
     const checkStreak = async () => {
-      const lastActive = await AsyncStorage.getItem('luna_last_active_date');
-      const activeToday = isStreakActiveToday(lastActive);
-      if (!activeToday) {
-        await scheduleStreakReminder();
-      } else {
-        await cancelStreakReminder();
+      try {
+        const lastActive = await AsyncStorage.getItem('luna_last_active_date');
+        const activeToday = isStreakActiveToday(lastActive);
+        if (!activeToday) {
+          await scheduleStreakReminder();
+        } else {
+          await cancelStreakReminder();
+        }
+      } catch (err) {
+        console.warn('[Home] Erro ao verificar ou agendar streak:', err);
       }
     };
     checkStreak();
@@ -60,7 +69,6 @@ export default function Home() {
     setSelectedMood(moodValue);
     
     try {
-      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
       const { error } = await supabase
@@ -78,7 +86,7 @@ export default function Home() {
     }
   };
 
-  const userName = "Ana";
+  const userName = user?.user_metadata?.full_name?.split(' ')[0] || "Explorador";
 
   const currentHour = new Date().getHours();
   const greeting = currentHour < 12 ? "Bom dia" : currentHour < 18 ? "Boa tarde" : "Boa noite";
@@ -94,16 +102,16 @@ export default function Home() {
         style={{ paddingTop: insets.top + 20, paddingBottom: 16, paddingHorizontal: 24 }}
       >
         <View className="flex-row items-center justify-between mb-4">
-          <View className="flex-row items-center gap-3">
-            <View className="w-12 h-12 rounded-full overflow-hidden bg-primary items-center justify-center">
+          <View className="flex-row items-center gap-3 flex-1 mr-4">
+            <View className="w-12 h-12 rounded-full overflow-hidden bg-primary items-center justify-center shrink-0">
               <Text className="text-primary-foreground text-lg font-semibold">{userName.charAt(0)}</Text>
             </View>
-            <View>
+            <View className="flex-1">
               <Text className="text-sm text-muted-foreground">{greeting}</Text>
-              <Text className="text-xl text-foreground font-semibold">{userName}!</Text>
+              <Text className="text-xl text-foreground font-semibold" numberOfLines={1} ellipsizeMode="tail">{userName}!</Text>
             </View>
           </View>
-          <View className="flex-row gap-3">
+          <View className="flex-row gap-3 shrink-0">
             <Pressable
               onPress={() => router.push("/notifications")}
               className="w-10 h-10 rounded-full bg-card items-center justify-center shadow-sm active:opacity-70 active:scale-95 transition-all"

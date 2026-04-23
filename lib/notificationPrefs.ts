@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { safeJSONParse } from './utils';
 
 export interface NotificationPrefs {
   enabled: boolean;
@@ -15,8 +16,7 @@ const DEFAULT_PREFS: NotificationPrefs = {
 export async function getNotificationPrefs(): Promise<NotificationPrefs> {
   try {
     const data = await AsyncStorage.getItem(PREFS_KEY);
-    if (!data) return DEFAULT_PREFS;
-    return JSON.parse(data);
+    return safeJSONParse(data, DEFAULT_PREFS);
   } catch (error) {
     console.error('Error reading notification prefs:', error);
     return DEFAULT_PREFS;

@@ -1,5 +1,5 @@
 import { Tabs } from "expo-router";
-import { Home, Clipboard, MessageCircle, Library, TrendingUp } from "lucide-react-native";
+import { Home, Clipboard, MessageCircle, Library, TrendingUp, User } from "lucide-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme, rawColors } from "../../lib/themeContext";
 
@@ -67,6 +67,13 @@ export default function TabLayout() {
         options={{
           title: "Progresso",
           tabBarIcon: ({ color }) => <TrendingUp size={24} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: "Perfil",
+          tabBarIcon: ({ color }) => <User size={24} color={color} />,
         }}
       />
     </Tabs>

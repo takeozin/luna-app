@@ -328,13 +328,12 @@ export default function ChatScreen() {
 
     const contextMessage = contextParts.join('\n');
     try {
-      const response = await fetch(process.env.EXPO_PUBLIC_N8N_WEBHOOK_URL!, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: contextMessage, sessionId, userId: stableId }),
+      const { data, error } = await supabase.functions.invoke('chat-proxy', {
+        body: { message: contextMessage, sessionId, userId: stableId }
       });
-      const data = await response.json();
-      const replyText = data.output || data.text || data.response || "Olá! Como você tem se sentido hoje?";
+      if (error) throw error;
+
+      const replyText = data?.output || data?.text || data?.response || "Olá! Como você tem se sentido hoje?";
       const lunaMessage: Message = { id: Date.now() + 1, sender: "luna", text: replyText, timestamp: new Date() };
       setMessages([lunaMessage]);
     } catch (error) {
@@ -391,10 +390,10 @@ export default function ChatScreen() {
   };
 
   const handleSend = async () => {
-    if (!inputValue.trim() || !userId) return;
-    if (detectCrisis(inputValue)) setShowCrisisAlert(true);
+    const userText = inputValue.trim();
+    if (!userText || !userId) return;
+    if (detectCrisis(userText)) setShowCrisisAlert(true);
 
-    const userText = inputValue;
     const userMessage: Message = { id: Date.now(), sender: "user", text: userText, timestamp: new Date() };
     setMessages((prev) => [...prev, userMessage]);
     setInputValue("");
@@ -428,19 +427,20 @@ export default function ChatScreen() {
     let lastError: any = null;
     for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
       try {
-        const response = await fetch(process.env.EXPO_PUBLIC_N8N_WEBHOOK_URL!, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: payload,
+        const { data, error } = await supabase.functions.invoke('chat-proxy', {
+          body: { 
+            message: !contextInjectedRef.current ? `${historicalContext}\n\n[MENSAGEM DO USUÁRIO]:\n${userText}` : userText, 
+            sessionId: sessionIdRef.current, 
+            userId: userId 
+          }
         });
 
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
+        if (error) {
+          throw error;
         }
 
         contextInjectedRef.current = true;
-        const data = await response.json();
-        const rawReply = data.output || data.text || data.response;
+        const rawReply = data?.output || data?.text || data?.response;
 
         // Se o n8n retornar vazio/nulo, trata como erro e tenta de novo
         if (!rawReply || rawReply.trim().length === 0) {
@@ -475,9 +475,16 @@ export default function ChatScreen() {
 
     // Se todas as tentativas falharam, exibe mensagem de erro
     if (lastError) {
+      const errorMsgText = lastError?.message?.toLowerCase() || '';
+      const isOffline = errorMsgText.includes('network') || errorMsgText.includes('fetch') || errorMsgText.includes('failed');
+      
+      const textResponse = isOffline
+        ? "Parece que você está sem internet no momento. Por favor, verifique sua conexão para podermos continuar conversando."
+        : "Desculpe, estou enfrentando uma instabilidade técnica. Podemos tentar novamente em instantes?";
+
       const errorMessage: Message = {
         id: Date.now() + 1, sender: "luna",
-        text: "Compreendo. Me conte um pouco mais.",
+        text: textResponse,
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorMessage]);
@@ -683,6 +690,7 @@ export default function ChatScreen() {
               placeholder="Desabafe aqui..."
               placeholderTextColor="#A1A1AA"
               multiline
+              maxLength={1000}
               value={inputValue}
               onChangeText={setInputValue}
               textAlignVertical="center"

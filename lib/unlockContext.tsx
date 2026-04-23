@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { loadStreak, updateStreak, StreakData } from './streaks';
+import { loadStreak, updateStreak, StreakData, forceSaveStreak } from './streaks';
 
 // === Mapeamento Científico SRQ-20 → Categorias do App ===
 // Baseado na análise fatorial de Iacoponi & Mari (1989)
@@ -87,7 +87,7 @@ export const useUnlock = () => useContext(UnlockContext);
 import { supabase } from './supabase';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from './themeContext';
-
+import { safeJSONParse } from './utils';
 
 export function calculateRiskLevel(score: number, isQ17Positive: boolean): RiskLevel {
   if (isQ17Positive || score >= 11) return 'critical';
@@ -126,6 +126,21 @@ export function UnlockProvider({ children }: { children: React.ReactNode }) {
     const updated = await updateStreak(current);
     setStreakData(updated);
     setStreakCount(updated.count);
+
+    // Salva no Supabase silenciosamente
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await supabase
+          .from('profiles')
+          .update({ 
+            streak_count: updated.count, 
+            last_active_date: updated.lastActiveDate,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', user.id);
+      }
+    } catch (e) {}
   }, []);
 
   // HELPER: Sincroniza perfil completo com Supabase
@@ -134,7 +149,8 @@ export function UnlockProvider({ children }: { children: React.ReactNode }) {
     unlocked: number[], 
     luna: number[],
     xp?: number,
-    modules?: string[]
+    modules?: string[],
+    streak?: StreakData
   ) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -149,9 +165,13 @@ export function UnlockProvider({ children }: { children: React.ReactNode }) {
         updated_at: new Date().toISOString()
       };
 
-      // Inclui XP e módulos se fornecidos
+      // Inclui propriedades opcionais
       if (xp !== undefined) profileData.current_xp = xp;
       if (modules !== undefined) profileData.completed_modules = modules;
+      if (streak !== undefined) {
+        profileData.streak_count = streak.count;
+        profileData.last_active_date = streak.lastActiveDate;
+      }
 
       const { error } = await supabase
         .from('profiles')
@@ -174,7 +194,7 @@ export function UnlockProvider({ children }: { children: React.ReactNode }) {
         if (user) {
           const { data: profile, error } = await supabase
             .from('profiles')
-            .select('risk_level, unlocked_categories, current_xp, completed_modules')
+            .select('risk_level, unlocked_categories, current_xp, completed_modules, streak_count, last_active_date')
             .eq('id', user.id)
             .single();
 
@@ -183,6 +203,8 @@ export function UnlockProvider({ children }: { children: React.ReactNode }) {
             const cloudUnlocked = profile.unlocked_categories || [];
             const cloudXP = profile.current_xp || 0;
             const cloudModules = profile.completed_modules || [];
+            const cloudStreakCount = profile.streak_count || 0;
+            const cloudLastActive = profile.last_active_date || null;
 
             // 2. Carrega também do AsyncStorage para comparar
             const [localRisk, localUnlocked, localLunaUnl, localXpStr, localModulesStr] = await Promise.all([
@@ -194,30 +216,56 @@ export function UnlockProvider({ children }: { children: React.ReactNode }) {
             ]);
 
             const localXP = localXpStr ? parseInt(localXpStr, 10) : 0;
-            const localModules: string[] = localModulesStr ? JSON.parse(localModulesStr) : [];
-            const localLuna: number[] = localLunaUnl ? JSON.parse(localLunaUnl) : [];
+            const localModules = safeJSONParse<string[]>(localModulesStr, []);
+            const localLuna = safeJSONParse<number[]>(localLunaUnl, []);
+            
+            const localStreak = await loadStreak();
 
             // 3. Usa o MAIOR valor (merge inteligente: nuvem vs local)
             const mergedXP = Math.max(cloudXP, localXP);
             const mergedModules = [...new Set([...cloudModules, ...localModules])];
             const mergedRisk = cloudRisk !== 'none' ? cloudRisk : (localRisk as RiskLevel) || 'none';
 
+            let mergedStreak: StreakData = { count: 0, lastActiveDate: null };
+            if (!cloudLastActive && !localStreak.lastActiveDate) {
+              mergedStreak = { count: 0, lastActiveDate: null };
+            } else if (!cloudLastActive) {
+              mergedStreak = localStreak;
+            } else if (!localStreak.lastActiveDate) {
+              mergedStreak = { count: cloudStreakCount, lastActiveDate: cloudLastActive };
+            } else {
+              if (cloudLastActive > localStreak.lastActiveDate) {
+                mergedStreak = { count: cloudStreakCount, lastActiveDate: cloudLastActive };
+              } else if (localStreak.lastActiveDate > cloudLastActive) {
+                mergedStreak = localStreak;
+              } else {
+                mergedStreak = { count: Math.max(cloudStreakCount, localStreak.count), lastActiveDate: cloudLastActive };
+              }
+            }
+
             setRiskLevel(mergedRisk);
             setUnlockedCategories(cloudUnlocked);
             setLunaUnlocked(localLuna);
             setCurrentXP(mergedXP);
             setCompletedModules(mergedModules);
+            setStreakData(mergedStreak);
+            setStreakCount(mergedStreak.count);
 
             // 4. Salva o merge de volta em ambos os lados
             await Promise.all([
               AsyncStorage.setItem(STORAGE_KEYS.RISK_LEVEL, mergedRisk),
               AsyncStorage.setItem(STORAGE_KEYS.USER_XP, mergedXP.toString()),
               AsyncStorage.setItem(STORAGE_KEYS.COMPLETED_MODULES, JSON.stringify(mergedModules)),
+              forceSaveStreak(mergedStreak),
             ]);
 
             // Se houve diferença, atualiza Supabase com o merge
-            if (mergedXP > cloudXP || mergedModules.length > cloudModules.length) {
-              syncProfileToSupabase(mergedRisk, cloudUnlocked, localLuna, mergedXP, mergedModules);
+            const needSyncXP = mergedXP > cloudXP;
+            const needSyncMod = mergedModules.length > cloudModules.length;
+            const needSyncStreak = mergedStreak.lastActiveDate !== cloudLastActive || mergedStreak.count !== cloudStreakCount;
+
+            if (needSyncXP || needSyncMod || needSyncStreak) {
+              syncProfileToSupabase(mergedRisk, cloudUnlocked, localLuna, mergedXP, mergedModules, mergedStreak);
             }
 
             console.log(`[UnlockContext] Carregado com merge: XP=${mergedXP}, Módulos=${mergedModules.length}`);
@@ -236,10 +284,10 @@ export function UnlockProvider({ children }: { children: React.ReactNode }) {
         ]);
         
         const currentRisk = (risk as RiskLevel) || 'none';
-        const currentUnlocked = unlocked ? JSON.parse(unlocked) : [];
-        const currentLunaUnl = lunaUnl ? JSON.parse(lunaUnl) : [];
+        const currentUnlocked = safeJSONParse<number[]>(unlocked, []);
+        const currentLunaUnl = safeJSONParse<number[]>(lunaUnl, []);
         const loadedXP = xp ? parseInt(xp, 10) : 0;
-        const loadedModules: string[] = modulesStr ? JSON.parse(modulesStr) : [];
+        const loadedModules = safeJSONParse<string[]>(modulesStr, []);
 
         setRiskLevel(currentRisk);
         setUnlockedCategories(currentUnlocked);

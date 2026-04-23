@@ -102,3 +102,10 @@ async function saveStreak(data: StreakData): Promise<void> {
     AsyncStorage.setItem(STREAK_KEYS.LAST_ACTIVE, data.lastActiveDate || ''),
   ]);
 }
+
+/**
+ * Força o salvamento de uma nova Streak. Útil para sincronização com o banco de dados nuvem (merge).
+ */
+export async function forceSaveStreak(data: StreakData): Promise<void> {
+  await saveStreak(data);
+}

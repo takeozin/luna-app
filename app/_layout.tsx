@@ -7,7 +7,7 @@ import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 
 import { UnlockProvider } from '../lib/unlockContext';
-import { supabase } from '../lib/supabase';
+import { AuthProvider } from '../lib/authContext';
 import { ThemeProvider, useTheme } from '../lib/themeContext';
 import * as Notifications from 'expo-notifications';
 import { logIncomingNotification } from '../lib/notifications';
@@ -34,6 +34,8 @@ function RootContent() {
       <NavigationThemeProvider value={DefaultTheme}>
         <Stack screenOptions={{ contentStyle: { backgroundColor: 'transparent' } }}>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+          <Stack.Screen name="login" options={{ headerShown: false, animation: 'fade' }} />
+          <Stack.Screen name="register" options={{ headerShown: false, animation: 'slide_from_right' }} />
           <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
         </Stack>
         <StatusBar style={activeTheme === 'oled' ? 'light' : 'dark'} />
@@ -44,16 +46,6 @@ function RootContent() {
 
 export default function RootLayout() {
   useEffect(() => {
-    // Inicializa a sessão anônima do Supabase para habilitar RLS
-    const initSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        const { error } = await supabase.auth.signInAnonymously();
-        if (error) console.error('[Supabase] Erro no login anônmo:', error.message);
-      }
-    };
-    initSession();
-
     // Listener para notificações recebidas (quando o app está no foreground)
     const subscription = Notifications.addNotificationReceivedListener(notification => {
       logIncomingNotification(notification);
@@ -64,9 +56,11 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider>
-      <UnlockProvider>
-        <RootContent />
-      </UnlockProvider>
+      <AuthProvider>
+        <UnlockProvider>
+          <RootContent />
+        </UnlockProvider>
+      </AuthProvider>
     </ThemeProvider>
   );
 }

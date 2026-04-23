@@ -14,6 +14,7 @@ import {
   CATEGORY_NAMES,
   type RiskLevel 
 } from "../lib/unlockContext";
+import { safeJSONParse } from "../lib/utils";
 
 
 // Categorias completas com seus ícones e cores
@@ -35,7 +36,7 @@ export default function AnamneseResult() {
   const { setRiskAndUnlock } = useUnlock();
 
   const score = parseInt(params.score || "0", 10);
-  const answers: Record<number, number> = params.answers ? JSON.parse(params.answers) : {};
+  const answers: Record<number, number> = safeJSONParse(params.answers, {});
   const isQ17Positive = params.q17 === "true" || answers[17] === 1 || answers["17" as any] === 1;
 
   const riskLevel = calculateRiskLevel(score, isQ17Positive);

@@ -141,22 +141,25 @@ export default function Anamnese() {
       const riskLevel = calculateRiskLevel(score, isQ17);
       const unlockedCategories = riskLevel === 'none' ? [] : calculateUnlockedCategories(answersData);
 
-      await supabase.from('anamnesis_responses').insert({
+      const { error } = await supabase.from('anamnesis_responses').insert({
         user_id: user.id,
-        clinical_id: stableId, // Mantemos como referência secundária
+        clinical_id: stableId,
         score: score,
         answers: answersData,
         risk_level: riskLevel,
         unlocked_categories: unlockedCategories,
       });
       
+      if (error) throw error;
+      return true;
     } catch (error: any) {
       console.error("❌ [Luna] Erro ao salvar anamnese:", error);
-      Alert.alert("Erro", "Não conseguimos salvar seus dados. Tente novamente.");
+      Alert.alert("Erro de Conexão", "Não conseguimos salvar seus dados. Verifique sua internet e tente novamente.");
+      return false;
     }
   };
 
-  const handleAnswer = (answerValue: number) => {
+  const handleAnswer = async (answerValue: number) => {
     const newAnswers = { ...answers, [questions[currentQuestion].id]: answerValue };
     setAnswers(newAnswers);
 
@@ -166,9 +169,10 @@ export default function Anamnese() {
       const finalScore = Object.values(newAnswers).reduce((acc: number, curr: any) => acc + (curr as number), 0);
       const isQ17Positive = newAnswers[17] === 1;
 
-      submitAnamnesisBackground(newAnswers, finalScore);
+      setLoading(true);
+      const success = await submitAnamnesisBackground(newAnswers, finalScore);
 
-      setTimeout(() => {
+      if (success) {
         router.push({
           pathname: "/anamnese-result",
           params: { 
@@ -177,7 +181,9 @@ export default function Anamnese() {
             answers: JSON.stringify(newAnswers),
           },
         });
-      }, 500);
+      } else {
+        setLoading(false);
+      }
     }
   };
 

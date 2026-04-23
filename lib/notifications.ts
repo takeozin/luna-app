@@ -122,19 +122,23 @@ export async function scheduleStreakReminder() {
   // Essa chamada será feita quando ele abre o app e vê se a streak de hoje já foi feita.
   // Se ele NÃO fez atividade hoje (streaks.ts), a gente agenda:
   
-  await Notifications.scheduleNotificationAsync({
-    identifier: 'streak_reminder',
-    content: {
-      title: "Não perca seu ritmo! 🔥",
-      body: "Você tem uma ofensiva em andamento. Faça uma atividade curta hoje para mantê-la viva!",
-      data: { type: 'reminder' },
-    },
-    trigger: {
-      type: Notifications.SchedulableTriggerInputTypes.DAILY,
-      hour: 21,
-      minute: 0,
-    },
-  });
+  try {
+    await Notifications.scheduleNotificationAsync({
+      identifier: 'streak_reminder',
+      content: {
+        title: "Não perca seu ritmo! 🔥",
+        body: "Você tem uma ofensiva em andamento. Faça uma atividade curta hoje para mantê-la viva!",
+        data: { type: 'reminder' },
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DAILY,
+        hour: 21,
+        minute: 0,
+      },
+    });
+  } catch (error) {
+    console.warn('[Notifications] Erro ao agendar streak reminder:', error);
+  }
 }
 
 export async function cancelStreakReminder() {

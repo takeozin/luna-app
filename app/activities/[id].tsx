@@ -9,6 +9,7 @@ import * as Haptics from 'expo-haptics';
 
 import { CBT_EXPERT_DATA } from '../data/activitiesData';
 import { useUnlock } from "../../lib/unlockContext";
+import { safeJSONParse } from "../../lib/utils";
 
 // Custom Confetti Particle
 const ConfettiParticle = ({ delay, color, initialX }: { delay: number, color: string, initialX: number }) => {
@@ -151,7 +152,7 @@ export default function InteractiveActivity() {
       // Salva respostas localmente para histórico
       try {
         const localAnswersJson = await AsyncStorage.getItem('@activity_responses');
-        const localAnswers = localAnswersJson ? JSON.parse(localAnswersJson) : [];
+        const localAnswers = safeJSONParse<any[]>(localAnswersJson, []);
         localAnswers.unshift({ module_title: title, responses: clinicalNotes, date: new Date().toISOString() });
         await AsyncStorage.setItem('@activity_responses', JSON.stringify(localAnswers.slice(0, 10)));
       } catch (localErr) {
