@@ -333,27 +333,25 @@ export default function ProgressScreen() {
             </View>
           </Modal>
 
-          {/* ===== REFLEXÃO MENSAL (Design original) ===== */}
+          {/* ===== REFLEXÃO MENSAL ===== */}
           <MotiView
             from={{ opacity: 0, translateY: 20 }}
             animate={{ opacity: 1, translateY: 0 }}
             transition={{ delay: 500, type: 'timing' }}
             className="mt-6"
           >
-            <View className="rounded-3xl p-[2px] bg-gradient-to-br from-[#A9C9FF] to-[#D6CCFE]">
-              <View className="bg-card/90 rounded-[22px] p-6">
-                <View className="flex-row items-center gap-2 mb-3">
-                  <Sparkles size={20} color="#8b5cf6" />
-                  <Text className="text-lg font-bold text-foreground">Reflexão Mensal</Text>
-                </View>
-                <Text className="text-[15px] leading-6 text-foreground/80 font-medium">
-                  {completedModules.length === 0 
-                    ? "Comece sua jornada completando a primeira atividade. Cada passo conta! ✨"
-                    : `Neste mês, você completou ${completedModules.length} exercícios e está construindo hábitos poderosos. Continue assim! Seus esforços estão fazendo diferença. ✨`
-                  }
-                </Text>
+            <Card className="border border-purple-200 dark:border-purple-900/50 shadow-sm p-6 bg-purple-50/50 dark:bg-purple-900/10 rounded-[22px]">
+              <View className="flex-row items-center gap-2 mb-3">
+                <Sparkles size={20} color="#8b5cf6" />
+                <Text className="text-lg font-bold text-foreground">Reflexão Mensal</Text>
               </View>
-            </View>
+              <Text className="text-[15px] leading-6 text-muted-foreground font-medium">
+                {completedModules.length === 0 
+                  ? "Comece sua jornada completando a primeira atividade. Cada passo conta! ✨"
+                  : `Neste mês, você completou ${completedModules.length} exercícios e está construindo hábitos poderosos. Continue assim! Seus esforços estão fazendo diferença. ✨`
+                }
+              </Text>
+            </Card>
           </MotiView>
         </View>
       </ScrollView>
