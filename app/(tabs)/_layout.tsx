@@ -1,5 +1,5 @@
 import { Tabs } from "expo-router";
-import { Home, Clipboard, MessageCircle, Library, TrendingUp, User } from "lucide-react-native";
+import { Home, MessageCircle, Library, TrendingUp, User } from "lucide-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme, rawColors } from "../../lib/themeContext";
 
@@ -41,13 +41,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <Home size={24} color={color} />,
         }}
       />
-      <Tabs.Screen
-        name="plan"
-        options={{
-          title: "Meu Plano",
-          tabBarIcon: ({ color }) => <Clipboard size={24} color={color} />,
-        }}
-      />
+
       <Tabs.Screen
         name="chat"
         options={{

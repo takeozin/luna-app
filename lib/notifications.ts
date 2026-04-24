@@ -4,7 +4,7 @@ import { getNotificationPrefs } from './notificationPrefs';
 import { addNotificationLog } from './notificationLog';
 
 // Banco de frases baseado em TCC / DBT
-const DAILY_QUOTES = [
+export const DAILY_QUOTES = [
   "Seus pensamentos não são fatos. São apenas hipóteses que sua mente criou.",
   "Você não precisa controlar o que sente, apenas decidir como agir sobre isso.",
   "Um passo de cada vez já é um passo adiante.",
@@ -37,11 +37,10 @@ const DAILY_QUOTES = [
   "Cultive a mente sábia: o equilíbrio entre a razão e a emoção."
 ];
 
-function getQuoteForPeriod(periodOffset: number = 0): string {
+export function getQuoteForPeriod(periodOffset: number = 0, targetDate: Date = new Date()): string {
   // Cada período do dia (manhã=0, tarde=1, noite=2) recebe uma frase diferente
-  const now = new Date();
-  const start = new Date(now.getFullYear(), 0, 0);
-  const diff = now.getTime() - start.getTime();
+  const start = new Date(targetDate.getFullYear(), 0, 0);
+  const diff = targetDate.getTime() - start.getTime();
   const oneDay = 1000 * 60 * 60 * 24;
   const dayOfYear = Math.floor(diff / oneDay);
   

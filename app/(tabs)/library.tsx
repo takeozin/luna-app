@@ -3,7 +3,7 @@ import { View, Text, TextInput, ScrollView, Pressable, Modal } from "react-nativ
 import { useRouter } from "expo-router";
 import { Card } from "../../components/Card";
 import { MotiView } from "moti";
-import { Search, Brain, Heart, Users, Zap, Moon, Focus, Coffee, MessageSquare, Lock, X } from "lucide-react-native";
+import { Search, Brain, Heart, Users, Zap, Moon, Focus, Coffee, MessageSquare, Lock, X, Clipboard } from "lucide-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import { useUnlock } from "../../lib/unlockContext";
@@ -24,13 +24,16 @@ export default function LibraryScreen() {
   const insets = useSafeAreaInsets();
   const [searchQuery, setSearchQuery] = useState("");
   const { isLocked, riskLevel } = useUnlock();
+  const [showUnlockedOnly, setShowUnlockedOnly] = useState(false);
   const [lockedModal, setLockedModal] = useState<{ visible: boolean; categoryName: string; isNone: boolean }>({
     visible: false, categoryName: "", isNone: false,
   });
 
-  const filteredCategories = categories.filter((category) =>
-    category.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredCategories = categories.filter((category) => {
+    const matchesSearch = category.name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesUnlocked = showUnlockedOnly ? !isLocked(category.id) : true;
+    return matchesSearch && matchesUnlocked;
+  });
 
   const handleCategoryPress = (category: typeof categories[0]) => {
     if (riskLevel === 'none') {
@@ -61,17 +64,38 @@ export default function LibraryScreen() {
           }
         </Text>
 
-        {/* Search */}
-        <View className="flex-row items-center bg-card rounded-[30px] border border-[#F0F0F0] px-4 py-3 shadow-sm" style={{ elevation: 2, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 5 }}>
-          <Search size={20} color="#a1a1aa" />
-          <TextInput
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            placeholder="Buscar por tema..."
-            placeholderTextColor="#a1a1aa"
-            className="flex-1 ml-3 text-base text-foreground pb-0.5"
-            returnKeyType="search"
-          />
+        {/* Search & Filter */}
+        <View className="flex-row items-center gap-3">
+          <View className="flex-1 flex-row items-center bg-card rounded-[30px] border border-[#F0F0F0] px-4 py-3 shadow-sm" style={{ elevation: 2, shadowColor: '#000', shadowOpacity: 0.05, shadowRadius: 5 }}>
+            <Search size={20} color="#a1a1aa" />
+            <TextInput
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              placeholder="Buscar por tema..."
+              placeholderTextColor="#a1a1aa"
+              className="flex-1 ml-3 text-base text-foreground pb-0.5"
+              returnKeyType="search"
+            />
+          </View>
+          
+          <Pressable 
+            onPress={() => setShowUnlockedOnly(!showUnlockedOnly)}
+            className="flex-row items-center gap-2"
+          >
+            <Text className={`font-semibold ${showUnlockedOnly ? 'text-primary' : 'text-slate-500'}`}>
+              Meu Plano
+            </Text>
+            <View 
+              className={`w-11 h-6 rounded-full px-1 justify-center ${showUnlockedOnly ? 'bg-primary' : 'bg-slate-300'}`}
+              style={{ elevation: 1 }}
+            >
+              <MotiView 
+                animate={{ translateX: showUnlockedOnly ? 20 : 0 }}
+                transition={{ type: 'spring', damping: 20, stiffness: 150 }}
+                className="w-4 h-4 rounded-full bg-white shadow-sm"
+              />
+            </View>
+          </Pressable>
         </View>
       </LinearGradient>
 
@@ -136,8 +160,10 @@ export default function LibraryScreen() {
         {filteredCategories.length === 0 && (
           <View className="items-center justify-center py-16">
             <Search size={48} color="#e4e4e7" className="mb-4" />
-            <Text className="text-muted-foreground text-center text-base">
-              Nenhum resultado encontrado para "{searchQuery}"
+            <Text className="text-muted-foreground text-center text-base px-10">
+              {showUnlockedOnly && searchQuery === ""
+                ? "Você ainda não desbloqueou módulos. Converse com a Luna para começar seu plano personalizado! ✨"
+                : `Nenhum resultado encontrado para "${searchQuery}"`}
             </Text>
           </View>
         )}

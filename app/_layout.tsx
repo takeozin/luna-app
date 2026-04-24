@@ -1,6 +1,6 @@
 import '../global.css';
 import { useEffect } from 'react';
-import { View } from 'react-native';
+import { View, Platform } from 'react-native';
 import { DefaultTheme, ThemeProvider as NavigationThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -11,6 +11,7 @@ import { AuthProvider } from '../lib/authContext';
 import { ThemeProvider, useTheme } from '../lib/themeContext';
 import * as Notifications from 'expo-notifications';
 import { logIncomingNotification } from '../lib/notifications';
+import { syncNotificationHistory } from '../lib/notificationLog';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -46,12 +47,30 @@ function RootContent() {
 
 export default function RootLayout() {
   useEffect(() => {
-    // Listener para notificações recebidas (quando o app está no foreground)
-    const subscription = Notifications.addNotificationReceivedListener(notification => {
-      logIncomingNotification(notification);
-    });
+    // Sincronizar histórico de notificações perdidas (apenas em dispositivos móveis)
+    if (Platform.OS !== 'web') {
+      syncNotificationHistory();
 
-    return () => subscription.remove();
+      // Listener para notificações recebidas (quando o app está no foreground)
+      const notificationSubscription = Notifications.addNotificationReceivedListener(notification => {
+        logIncomingNotification(notification);
+      });
+
+      // Listener para quando o usuário CLICA na notificação (background/closed)
+      const responseSubscription = Notifications.addNotificationResponseReceivedListener(response => {
+        logIncomingNotification(response.notification);
+      });
+
+      // Verificar se há notificações pendentes que ainda não foram logadas
+      Notifications.getPresentedNotificationsAsync().then(notifications => {
+        notifications.forEach(n => logIncomingNotification(n));
+      });
+
+      return () => {
+        notificationSubscription.remove();
+        responseSubscription.remove();
+      };
+    }
   }, []);
 
   return (
