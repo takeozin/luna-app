@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, Pressable, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, ScrollView, Pressable, ActivityIndicator, Alert, Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { LogOut, User as UserIcon, Mail, Settings, Moon, Bell } from 'lucide-react-native';
 import { useAuth } from '../../lib/authContext';
@@ -39,22 +39,30 @@ export default function ProfileScreen() {
   }, [email]);
 
   const handleSignOut = async () => {
-    Alert.alert(
-      "Sair",
-      "Tem certeza que deseja desconectar sua conta?",
-      [
-        { text: "Cancelar", style: "cancel" },
-        { 
-          text: "Sair", 
-          style: "destructive",
-          onPress: async () => {
-            setLoggingOut(true);
-            await signOut();
-            setLoggingOut(false);
+    if (Platform.OS === 'web') {
+      if (window.confirm("Tem certeza que deseja desconectar sua conta?")) {
+        setLoggingOut(true);
+        await signOut();
+        setLoggingOut(false);
+      }
+    } else {
+      Alert.alert(
+        "Sair",
+        "Tem certeza que deseja desconectar sua conta?",
+        [
+          { text: "Cancelar", style: "cancel" },
+          { 
+            text: "Sair", 
+            style: "destructive",
+            onPress: async () => {
+              setLoggingOut(true);
+              await signOut();
+              setLoggingOut(false);
+            }
           }
-        }
-      ]
-    );
+        ]
+      );
+    }
   };
 
   const initial = fullName.charAt(0).toUpperCase();
