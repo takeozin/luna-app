@@ -47,3 +47,6 @@ app-example
 *.py
 new_wf*.json
 tsc_errors.txt
+
+# Luna AI Agent Rules
+agent.md
