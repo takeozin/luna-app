@@ -33,7 +33,7 @@ function RootContent() {
   return (
     <View style={themeVars} className={`flex-1 theme-${activeTheme} bg-background`}>
       <NavigationThemeProvider value={DefaultTheme}>
-        <Stack screenOptions={{ contentStyle: { backgroundColor: 'transparent' } }}>
+        <Stack screenOptions={{ contentStyle: { backgroundColor: 'transparent' }, headerShown: false }}>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="login" options={{ headerShown: false, animation: 'fade' }} />
           <Stack.Screen name="register" options={{ headerShown: false, animation: 'slide_from_right' }} />

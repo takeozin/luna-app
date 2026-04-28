@@ -251,7 +251,7 @@ export default function Home() {
                 <Button
                   variant="primary"
                   size="sm"
-                  onPress={() => router.push("/plan")}
+                  onPress={() => router.push("/library")}
                   className="w-full"
                 >
                   Começar agora
@@ -263,7 +263,7 @@ export default function Home() {
             <MotiView from={{ opacity: 0, translateY: 20 }} animate={{ opacity: 1, translateY: 0 }} transition={{ type: "timing", duration: 400, delay: 400 }}>
               <View className="flex-row items-center justify-between mb-4 mt-2">
                 <Text className="text-lg font-semibold text-foreground">Suas Atividades</Text>
-                <Pressable onPress={() => router.push("/plan")}>
+                <Pressable onPress={() => router.push("/library")}>
                   <Text className="text-sm font-semibold text-[#A9C9FF]">Ver todos</Text>
                 </Pressable>
               </View>

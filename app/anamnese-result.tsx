@@ -339,7 +339,7 @@ export default function AnamneseResult() {
                 if (isCritical) {
                   router.replace({ pathname: "/(tabs)/chat", params: { mode: 'crisis' } } as any);
                 } else {
-                  router.replace("/(tabs)/plan" as any);
+                  router.replace("/(tabs)/library" as any);
                 }
               }}
               className="w-full"
