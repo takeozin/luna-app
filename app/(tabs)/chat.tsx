@@ -333,7 +333,8 @@ export default function ChatScreen() {
       });
       if (error) throw error;
 
-      const replyText = data?.output || data?.text || data?.response || "Olá! Como você tem se sentido hoje?";
+      const responseObj = Array.isArray(data) ? data[0] : data;
+      const replyText = responseObj?.output || responseObj?.text || responseObj?.response || "Olá! Como você tem se sentido hoje?";
       const lunaMessage: Message = { id: Date.now() + 1, sender: "luna", text: replyText, timestamp: new Date() };
       setMessages([lunaMessage]);
     } catch (error) {
@@ -440,7 +441,8 @@ export default function ChatScreen() {
         }
 
         contextInjectedRef.current = true;
-        const rawReply = data?.output || data?.text || data?.response;
+        const responseObj = Array.isArray(data) ? data[0] : data;
+        const rawReply = responseObj?.output || responseObj?.text || responseObj?.response || responseObj?.message;
 
         // Se o n8n retornar vazio/nulo, trata como erro e tenta de novo
         if (!rawReply || rawReply.trim().length === 0) {
