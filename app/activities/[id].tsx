@@ -105,6 +105,26 @@ export default function InteractiveActivity() {
   });
 
   const activity = CBT_EXPERT_DATA[id as string];
+  const { isLocked, isLoading: isUnlockLoading } = useUnlock();
+
+  useEffect(() => {
+    if (!isUnlockLoading && activity && id) {
+      const moduleIdNum = parseInt(id as string, 10);
+      const catIdx = Math.floor(moduleIdNum / 100);
+      if (isLocked(catIdx)) {
+        console.log(`[Security] Tentativa de acesso a módulo bloqueado: ${id}`);
+        router.replace('/');
+      }
+    }
+  }, [id, activity, isUnlockLoading, isLocked]);
+
+  if (isUnlockLoading) {
+    return (
+      <SafeAreaView className="flex-1 bg-[#FAFAFA] items-center justify-center">
+        <Text className="text-slate-500">Verificando acesso...</Text>
+      </SafeAreaView>
+    );
+  }
 
   if (!activity) {
     return (

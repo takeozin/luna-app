@@ -59,6 +59,7 @@ export default function ChatScreen() {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [isSending, setIsSending] = useState(false);
   const [historicalContext, setHistoricalContext] = useState("");
   const [showCrisisAlert, setShowCrisisAlert] = useState(false);
   const [userMessageCount, setUserMessageCount] = useState(0);
@@ -396,8 +397,11 @@ export default function ChatScreen() {
   };
 
   const handleSend = async () => {
+    if (isSending) return;
     const userText = inputValue.trim();
     if (!userText || !userId) return;
+    
+    setIsSending(true);
     if (detectCrisis(userText)) setShowCrisisAlert(true);
 
     const userMessage: Message = { id: Date.now(), sender: "user", text: userText, timestamp: new Date() };
@@ -498,6 +502,7 @@ export default function ChatScreen() {
     }
 
     setIsTyping(false);
+    setIsSending(false);
     setTimeout(() => { scrollViewRef.current?.scrollToEnd({ animated: true }); }, 100);
   };
 
