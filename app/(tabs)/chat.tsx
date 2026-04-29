@@ -249,6 +249,11 @@ export default function ChatScreen() {
             setCooldownStartAt(lastSession.cooldown_start_at);
             setIsLoadingSession(false);
             return;
+          } else {
+            // O cooldown já expirou, então limpa o estado de pausa e inicia uma nova sessão do zero
+            setCooldownStartAt(null);
+            await startNewSession(stableId);
+            return;
           }
         }
         setCurrentSessionId(lastSession.id);
