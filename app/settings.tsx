@@ -226,8 +226,9 @@ export default function SettingsScreen() {
 
             {notificationsEnabled && (
               <MotiView 
-                from={{ opacity: 0, height: 0 }} 
-                animate={{ opacity: 1, height: 'auto' }}
+                from={{ opacity: 0 }} 
+                animate={{ opacity: 1 }}
+                transition={{ type: 'timing', duration: 300 }}
                 className="pt-4 border-t gap-2"
                 style={{ borderColor }}
               >
